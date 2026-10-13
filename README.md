@@ -6,6 +6,13 @@ Gather is a group food ordering application developed as a senior software engin
 
 Sprint 1 focuses on implementing the foundational features required for users to access the application, manage their profiles, and create or join group sessions.
 
+## Project Objectives
+
+- Simplify the group food ordering process.
+- Allow users to manage their accounts and profile information.
+- Enable hosts to create group sessions and invite members.
+- Provide a shared environment where users can participate in group ordering.
+
 ## Sprint 1 Features
 
 - **User Registration:** Create a new user account.
