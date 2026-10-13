@@ -36,7 +36,7 @@ Sprint 1 focuses on implementing the foundational features required for users to
 
 ### Installation and Setup
 
-1. Clone the repository:
+1. Clone the Repository:
 
    ```bash
    git clone https://github.com/221511324/Gather-.git
