@@ -22,7 +22,7 @@ Sprint 1 focuses on implementing the foundational features required for users to
 - **Programming Language:** Dart
 - **Database and Backend Services:** Firebase
 - **Development Environment:** Visual Studio Code
-- **Version Control:** Git and GitHub
+- **Version Control:** GitHub
 - **Testing:** Unit Testing and Integration Testing
 
 ## Getting Started
