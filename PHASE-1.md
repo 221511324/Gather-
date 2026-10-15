@@ -38,8 +38,8 @@ has been removed from this branch rather than left half-wired.
 | US9 shared group cart | US15 rewards and vouchers |
 | US10 group payment options | US16 notifications |
 | US11 order tracking | US17 application settings |
-| US12 saved group sessions | US18 admin dashboard |
-| US13 favourites | | US19 Share Stories |
+| US12 saved group sessions | US19 Share Stories
+| US13 favourites + US18 admin dashboard | ||
 
 Because of that, the bottom bar has **four** tabs in Phase 1 (Home, Search,
 Group, Profile). Orders joins it in Phase 2. The menu item sheet shows an
