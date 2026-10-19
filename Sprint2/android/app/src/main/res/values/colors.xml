@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#FDF7EF</color>
+    <!-- Mid-point of the brand band gradient. -->
+    <color name="launch_background">#EA6B1B</color>
+</resources>
