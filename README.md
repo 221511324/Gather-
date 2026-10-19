@@ -30,8 +30,6 @@ Sprint 1 focuses on the foundational functionality of the application.
 
 Sprint 2 expands the application with additional screens and functionality for the group food ordering experience.
 
-- **Authentication:** Access the application's authentication features.
-- **Home:** Navigate the application's main screen.
 - **Restaurant Browsing:** Explore restaurant-related information.
 - **Search:** Search for relevant items or information.
 - **Shopping Cart:** Manage selected food items.
