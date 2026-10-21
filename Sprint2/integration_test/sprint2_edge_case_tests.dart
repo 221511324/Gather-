@@ -16,7 +16,7 @@ import 'package:gather/core/widgets/gather_button.dart';
 import 'package:gather/core/widgets/gather_field.dart';
 import 'package:gather/firebase_options.dart';
 
-/// Sprint 2 edge cases, TC_E_001 to TC_E_016.
+/// Sprint 2 edge cases, TC_IT_001 to TC_IT_016.
 ///
 /// The user-story tests check that the features work. These check that they
 /// refuse what they should: one member editing another's items, a non-host
@@ -98,7 +98,7 @@ void main() {
     c.dispose();
   });
 
-  testWidgets('TC_E_001 A member cannot edit another member\'s cart line', (t) async {
+  testWidgets('TC_IT_001 A member cannot edit another member\'s cart line', (t) async {
     host = await actAs(hostEmail);
     await c.read(sessionServiceProvider)
         .addLine(sessionId: sessionId, item: menu.first, owner: host, quantity: 1);
@@ -113,10 +113,10 @@ void main() {
     final after = ((await c.read(sessionServiceProvider).fetchLines(sessionId)).valueOrNull ?? const <CartLine>[])
         .firstWhere((l) => l.id == hostLine.id);
     expect(after.quantity, 1, reason: 'the quantity must be unchanged');
-    debugPrint('TC_E_001 PASS refused="${r.errorOrNull}"');
+    debugPrint('TC_IT_001 PASS refused="${r.errorOrNull}"');
   });
 
-  testWidgets('TC_E_002 A member cannot delete another member\'s cart line', (t) async {
+  testWidgets('TC_IT_002 A member cannot delete another member\'s cart line', (t) async {
     final hostLine = ((await c.read(sessionServiceProvider).fetchLines(sessionId)).valueOrNull ?? const <CartLine>[])
         .firstWhere((l) => l.ownerId == host.uid);
     member = await actAs(memberEmail);
@@ -125,47 +125,47 @@ void main() {
     expect(r.isSuccess, isFalse, reason: 'FR12: only the owner may remove their line');
     expect(((await c.read(sessionServiceProvider).fetchLines(sessionId)).valueOrNull ?? const <CartLine>[])
         .any((l) => l.id == hostLine.id), isTrue);
-    debugPrint('TC_E_002 PASS refused="${r.errorOrNull}"');
+    debugPrint('TC_IT_002 PASS refused="${r.errorOrNull}"');
   });
 
-  testWidgets('TC_E_003 An item from another restaurant is refused', (t) async {
+  testWidgets('TC_IT_003 An item from another restaurant is refused', (t) async {
     member = await actAs(memberEmail);
     final otherMenu = await c.read(catalogServiceProvider).fetchMenu(otherRestaurant.id);
     final r = await c.read(sessionServiceProvider)
         .addLine(sessionId: sessionId, item: otherMenu.first, owner: member, quantity: 1);
     expect(r.isSuccess, isFalse,
         reason: 'a shared cart holds one restaurant\'s food');
-    debugPrint('TC_E_003 PASS refused="${r.errorOrNull}"');
+    debugPrint('TC_IT_003 PASS refused="${r.errorOrNull}"');
   });
 
-  testWidgets('TC_E_004 An outsider cannot read the shared cart', (t) async {
+  testWidgets('TC_IT_004 An outsider cannot read the shared cart', (t) async {
     outsider = await actAs(outsiderEmail);
     final r = await c.read(sessionServiceProvider).fetchLines(sessionId);
     expect(r.isSuccess, isFalse,
         reason: 'someone who never joined must not read the shared cart');
     expect(r.errorOrNull, isNotNull,
         reason: 'and must get a message rather than an uncaught exception');
-    debugPrint('TC_E_004 PASS refused="${r.errorOrNull}"');
+    debugPrint('TC_IT_004 PASS refused="${r.errorOrNull}"');
   });
 
-  testWidgets('TC_E_005 An outsider cannot add to the shared cart', (t) async {
+  testWidgets('TC_IT_005 An outsider cannot add to the shared cart', (t) async {
     outsider = await actAs(outsiderEmail);
     final r = await c.read(sessionServiceProvider)
         .addLine(sessionId: sessionId, item: menu.first, owner: outsider, quantity: 1);
     expect(r.isSuccess, isFalse, reason: 'only members may add to the cart');
-    debugPrint('TC_E_005 PASS refused="${r.errorOrNull}"');
+    debugPrint('TC_IT_005 PASS refused="${r.errorOrNull}"');
   });
 
-  testWidgets('TC_E_006 A member cannot choose the restaurant', (t) async {
+  testWidgets('TC_IT_006 A member cannot choose the restaurant', (t) async {
     member = await actAs(memberEmail);
     final r = await c.read(sessionServiceProvider)
         .chooseRestaurant(sessionId: sessionId, restaurant: otherRestaurant);
     expect(r.isSuccess, isFalse, reason: 'choosing the restaurant is the host\'s decision');
     expect((await session()).restaurantId, restaurant.id);
-    debugPrint('TC_E_006 PASS refused="${r.errorOrNull}"');
+    debugPrint('TC_IT_006 PASS refused="${r.errorOrNull}"');
   });
 
-  testWidgets('TC_E_007 A member cannot set the payment mode', (t) async {
+  testWidgets('TC_IT_007 A member cannot set the payment mode', (t) async {
     member = await actAs(memberEmail);
     final lines = (await c.read(sessionServiceProvider).fetchLines(sessionId)).valueOrNull ?? const <CartLine>[];
     final totals = OrderService.totalsFor(
@@ -173,10 +173,10 @@ void main() {
     final r = await c.read(sessionServiceProvider).setPaymentMode(
         sessionId: sessionId, mode: PaymentMode.hostPays, totals: totals, lines: lines);
     expect(r.isSuccess, isFalse, reason: 'US10: the host chooses how the group pays');
-    debugPrint('TC_E_007 PASS refused="${r.errorOrNull}"');
+    debugPrint('TC_IT_007 PASS refused="${r.errorOrNull}"');
   });
 
-  testWidgets('TC_E_008 An order cannot be placed before everyone has paid', (t) async {
+  testWidgets('TC_IT_008 An order cannot be placed before everyone has paid', (t) async {
     host = await actAs(hostEmail);
     final service = c.read(sessionServiceProvider);
     final lines = (await service.fetchLines(sessionId)).valueOrNull ?? const <CartLine>[];
@@ -190,10 +190,10 @@ void main() {
         totals: totals, paymentMethodLabel: 'Visa', deliveryAddress: 'Riyadh');
     expect(r.isSuccess, isFalse, reason: 'everyone must have settled first');
     expect(r.errorOrNull, contains('pending'));
-    debugPrint('TC_E_008 PASS refused="${r.errorOrNull}"');
+    debugPrint('TC_IT_008 PASS refused="${r.errorOrNull}"');
   });
 
-  testWidgets('TC_E_009 An order below the minimum is refused', (t) async {
+  testWidgets('TC_IT_009 An order below the minimum is refused', (t) async {
     host = await actAs(hostEmail);
     final service = c.read(sessionServiceProvider);
     for (final m in (await session()).members) {
@@ -205,10 +205,10 @@ void main() {
         session: await session(), restaurant: restaurant, lines: lines,
         totals: tiny, paymentMethodLabel: 'Visa', deliveryAddress: 'Riyadh');
     expect(r.isSuccess, isFalse, reason: 'the restaurant minimum must be enforced');
-    debugPrint('TC_E_009 PASS refused="${r.errorOrNull}"');
+    debugPrint('TC_IT_009 PASS refused="${r.errorOrNull}"');
   });
 
-  testWidgets('TC_E_010 An equal split across one member gives them the total',
+  testWidgets('TC_IT_010 An equal split across one member gives them the total',
       (t) async {
     final solo = GroupSession(
       id: 'x', code: '1234', name: 'solo',
@@ -223,10 +223,10 @@ void main() {
     expect(allocated.length, 1);
     expect((allocated.first.amountDue * 100).round(), (totals.total * 100).round(),
         reason: 'a group of one owes the whole total');
-    debugPrint('TC_E_010 PASS ${allocated.first.amountDue}');
+    debugPrint('TC_IT_010 PASS ${allocated.first.amountDue}');
   });
 
-  testWidgets('TC_E_011 A suspended account cannot sign in', (t) async {
+  testWidgets('TC_IT_011 A suspended account cannot sign in', (t) async {
     await actAs(adminEmail, adminPassword);
     final suspend = await c.read(adminServiceProvider)
         .setAccountStatus(uid: member.uid, status: AccountStatus.suspended);
@@ -238,7 +238,7 @@ void main() {
     expect(attempt.isSuccess, isFalse,
         reason: 'US18-AC5: suspending an account must actually stop it being used');
     expect(attempt.errorOrNull, contains('suspended'));
-    debugPrint('TC_E_011 PASS refused="${attempt.errorOrNull}"');
+    debugPrint('TC_IT_011 PASS refused="${attempt.errorOrNull}"');
 
     // put the account back so the rest of the run can use it
     await actAs(adminEmail, adminPassword);
@@ -248,7 +248,7 @@ void main() {
     expect(back.uid, member.uid, reason: 'restoring must let them back in');
   });
 
-  testWidgets('TC_E_013 A member cannot remove someone else\'s suggestion',
+  testWidgets('TC_IT_013 A member cannot remove someone else\'s suggestion',
       (t) async {
     final service = c.read(sessionServiceProvider);
     host = await actAs(hostEmail);
@@ -265,10 +265,10 @@ void main() {
         reason: 'US8: only the host may clear someone else\'s pick');
     final still = (await c.read(sessionServiceProvider).fetch(sessionId))!;
     expect(still.suggestions.map((x) => x.restaurantId), contains(otherRestaurant.id));
-    debugPrint('TC_E_013 PASS refused="${r.errorOrNull}"');
+    debugPrint('TC_IT_013 PASS refused="${r.errorOrNull}"');
   });
 
-  testWidgets('TC_E_014 The host can clear any suggestion', (t) async {
+  testWidgets('TC_IT_014 The host can clear any suggestion', (t) async {
     host = await actAs(hostEmail);
     final r = await c.read(sessionServiceProvider).removeSuggestion(
         sessionId: sessionId, restaurantId: otherRestaurant.id, byUid: host.uid);
@@ -276,25 +276,25 @@ void main() {
     final after = (await c.read(sessionServiceProvider).fetch(sessionId))!;
     expect(after.suggestions.map((x) => x.restaurantId),
         isNot(contains(otherRestaurant.id)));
-    debugPrint('TC_E_014 PASS');
+    debugPrint('TC_IT_014 PASS');
   });
 
-  testWidgets('TC_E_012 An outsider cannot save someone else\'s session as a group',
+  testWidgets('TC_IT_012 An outsider cannot save someone else\'s session as a group',
       (t) async {
     outsider = await actAs(outsiderEmail);
     final s = await c.read(sessionServiceProvider).fetch(sessionId);
     if (s == null) {
-      debugPrint('TC_E_012 PASS the session is not even readable');
+      debugPrint('TC_IT_012 PASS the session is not even readable');
       return;
     }
     final r = await c.read(sessionServiceProvider)
         .saveAsGroup(session: s, ownerId: host.uid, name: 'Stolen group');
     expect(r.isSuccess, isFalse,
         reason: 'US12: a saved group belongs to the person saving it');
-    debugPrint('TC_E_012 PASS refused="${r.errorOrNull}"');
+    debugPrint('TC_IT_012 PASS refused="${r.errorOrNull}"');
   });
 
-  testWidgets('TC_E_016 A session cannot take more than 20 people', (t) async {
+  testWidgets('TC_IT_016 A session cannot take more than 20 people', (t) async {
     final service = c.read(sessionServiceProvider);
     host = await actAs(hostEmail);
     final created = await service.createSession(host: host, name: 'Capacity');
@@ -332,10 +332,10 @@ void main() {
 
     host = await actAs(hostEmail);
     await service.cancel(full.id);
-    debugPrint('TC_E_016 PASS refused="${r.errorOrNull}"');
+    debugPrint('TC_IT_016 PASS refused="${r.errorOrNull}"');
   });
 
-  testWidgets('TC_E_015 Leaving a session still allows joining another one',
+  testWidgets('TC_IT_015 Leaving a session still allows joining another one',
       (t) async {
     // Reported from two devices: after leaving a session, the Join button on
     // the group hub sat on a spinner and could not be tapped again. It is a
@@ -426,7 +426,7 @@ void main() {
     await joinByCodeThroughTheUi(second.code, 'Late dinner');
     expect((await service.fetch(second.id))!.hasMember(member.uid), isTrue,
         reason: 'the member must be able to join a second session after leaving the first');
-    debugPrint('TC_E_015 PASS joined ${first.code}, left it, joined ${second.code}');
+    debugPrint('TC_IT_015 PASS joined ${first.code}, left it, joined ${second.code}');
 
     // ------------------------------------------------------------ cleanup --
     await t.pumpWidget(const SizedBox.shrink());
