@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -36,12 +37,22 @@ class AdminShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final userAsync = ref.watch(currentUserProvider);
 
+    final user = userAsync.valueOrNull;
+
     return BrandScaffold(
       title: title,
       subtitle: subtitle,
-      showBack: true,
+      // On the web console there is nowhere to go back to — the browser only
+      // ever shows the admin area — so the arrow would be a dead control.
+      showBack: !kIsWeb,
       padBody: padBody,
-      actions: actions,
+      actions: [
+        ...?actions,
+        // Without this the console is a one-way door: you can sign in and
+        // never sign out, and there is no customer app to leave through.
+        if (user != null && user.isAdmin)
+          _SignOutButton(email: user.email, ref: ref),
+      ],
       bandContent: bandContent,
       child: userAsync.when(
         loading: () => const LoadingView(),
@@ -59,6 +70,65 @@ class AdminShell extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Signs the administrator out, with a confirmation so a stray tap during a
+/// demonstration does not end the session.
+class _SignOutButton extends StatelessWidget {
+  const _SignOutButton({required this.email, required this.ref});
+
+  final String email;
+  final WidgetRef ref;
+
+  @override
+  Widget build(BuildContext context) => PopupMenuButton<String>(
+        tooltip: 'Account',
+        icon: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.2),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.account_circle_outlined,
+              size: 21, color: Colors.white),
+        ),
+        itemBuilder: (context) => [
+          PopupMenuItem(
+            enabled: false,
+            child: Text('Signed in as $email', style: AppType.caption),
+          ),
+          const PopupMenuDivider(),
+          const PopupMenuItem(
+            value: 'out',
+            child: Text('Sign out', style: TextStyle(color: AppColors.danger)),
+          ),
+        ],
+        onSelected: (v) async {
+          if (v != 'out') return;
+          final confirm = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Sign out?'),
+              content: const Text('You will need the administrator '
+                  'credentials to get back in.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Stay'),
+                ),
+                FilledButton(
+                  style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Sign out'),
+                ),
+              ],
+            ),
+          );
+          if (confirm != true) return;
+          await ref.read(authServiceProvider).signOut();
+        },
+      );
 }
 
 /// A labelled metric tile for the dashboard.

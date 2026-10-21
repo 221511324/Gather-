@@ -43,13 +43,18 @@ class AdminDashboardScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(
                 Insets.gutter, Insets.xl, Insets.gutter, Insets.xxxl),
             children: [
-              GridView.count(
-                crossAxisCount: 2,
+              // A fixed tile height rather than an aspect ratio: the ratio
+              // overflowed by a hair on a narrow phone and stretched the tiles
+              // to the height of a monitor on the web console.
+              GridView(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                crossAxisSpacing: Insets.md,
-                mainAxisSpacing: Insets.md,
-                childAspectRatio: 1.32,
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 260,
+                  crossAxisSpacing: Insets.md,
+                  mainAxisSpacing: Insets.md,
+                  mainAxisExtent: 140,
+                ),
                 children: [
                   StatTile(
                     label: 'TOTAL USERS',

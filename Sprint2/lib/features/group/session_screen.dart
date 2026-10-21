@@ -343,7 +343,7 @@ class _MembersSection extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SectionHeader(
-            title: 'Members (${session.memberCount})',
+            title: 'Members (${session.memberCount} of ${GroupSession.maxMembers})',
             actionLabel: isHost && session.stage.isLive ? 'Invite' : null,
             onAction:
                 isHost && session.stage.isLive ? () => InviteSheet.show(context, session) : null,
