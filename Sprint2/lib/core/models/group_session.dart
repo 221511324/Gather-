@@ -225,6 +225,13 @@ class RestaurantSuggestion {
 }
 
 class GroupSession {
+  /// The most people one session can hold, host included.
+  ///
+  /// A shared cart is read in full by everyone in the session, so the document
+  /// grows with the group; a ceiling keeps that readable and keeps a session
+  /// something a group can actually coordinate.
+  static const maxMembers = 20;
+
   const GroupSession({
     required this.id,
     required this.code,
@@ -297,6 +304,15 @@ class GroupSession {
       if (m.uid == uid) return m;
     }
     return null;
+  }
+
+  /// Whether anyone else can still join.
+  bool get isFull => members.length >= maxMembers;
+
+  /// How many places are left, never below zero.
+  int get placesLeft {
+    final left = maxMembers - members.length;
+    return left < 0 ? 0 : left;
   }
 
   /// The one suggestion this member put forward, if any. Each member gets a

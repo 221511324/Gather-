@@ -167,6 +167,17 @@ class SessionService {
         }
         if (session.hasMember(user.uid)) return session;
 
+        // Checked inside the transaction, so two people joining the twentieth
+        // place at the same moment cannot both succeed.
+        if (session.isFull) {
+          throw FirebaseException(
+            plugin: 'gather',
+            code: 'full',
+            message: 'This session is full — it already has '
+                '${GroupSession.maxMembers} people',
+          );
+        }
+
         final member = SessionMember(
           uid: user.uid,
           name: user.fullName.isEmpty ? user.username : user.fullName,

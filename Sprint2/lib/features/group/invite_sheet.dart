@@ -113,7 +113,17 @@ class _InviteSheetState extends ConsumerState<InviteSheet> {
           children: [
             Text('Invite people', style: AppType.headline),
             const SizedBox(height: Insets.xs),
-            Text('Four ways to get everyone into this session.', style: AppType.caption),
+            Text(
+              widget.session.isFull
+                  ? 'This session is full — it already has '
+                      '${GroupSession.maxMembers} people.'
+                  : 'Four ways to get everyone into this session. '
+                      '${widget.session.placesLeft} '
+                      '${widget.session.placesLeft == 1 ? 'place' : 'places'} left.',
+              style: AppType.caption.copyWith(
+                color: widget.session.isFull ? AppColors.danger : null,
+              ),
+            ),
             const SizedBox(height: Insets.xl),
 
             // 1 — the code.
