@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "34986414138",
+    "project_id": "gather-856d1",
+    "storage_bucket": "gather-856d1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:34986414138:android:cea59953380f26e057a503",
+        "android_client_info": {
+          "package_name": "edu.psu.gather"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBu-qCyR9q8LG5Fn79ALtfwc_yd0jXqtAo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

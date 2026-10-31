@@ -1,0 +1,35 @@
+{
+    "name": "gather",
+    "short_name": "gather",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#FDF7EF",
+    "theme_color": "#CC4A12",
+    "description": "Gather: a group food ordering app where everyone in the group joins one session, picks and customizes their own meal into a shared cart, and the host manages restaurant selection and flexible payment.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
