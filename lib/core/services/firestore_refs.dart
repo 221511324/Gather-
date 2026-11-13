@@ -17,8 +17,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 ///   menu/{itemId}
 /// sessions/{id}                   group ordering session
 ///   lines/{lineId}                the shared cart
+/// paymentOptions/{id}            what the platform accepts (admin managed)
 /// orders/{id}
 /// vouchers/{id}                   reward catalogue (admin managed)
+/// stories/{id}                    a shared food photo (US19)
+///   media/image                   its picture, base64, kept apart so the
+///                                 feed can be listed without it
 /// tickets/{id}                    support issues
 /// meta/{doc}                      seed bookkeeping
 /// ```
@@ -51,11 +55,24 @@ class FirestoreRefs {
   DocumentReference<Map<String, dynamic>> session(String id) => sessions.doc(id);
   CollectionReference<Map<String, dynamic>> sessionLines(String sessionId) => session(sessionId).collection('lines');
 
+  CollectionReference<Map<String, dynamic>> get paymentOptions =>
+      db.collection('paymentOptions');
+  DocumentReference<Map<String, dynamic>> paymentOption(String id) =>
+      paymentOptions.doc(id);
+
   CollectionReference<Map<String, dynamic>> get orders => db.collection('orders');
   DocumentReference<Map<String, dynamic>> order(String id) => orders.doc(id);
 
   CollectionReference<Map<String, dynamic>> get vouchers => db.collection('vouchers');
   DocumentReference<Map<String, dynamic>> voucher(String id) => vouchers.doc(id);
+
+  CollectionReference<Map<String, dynamic>> get stories => db.collection('stories');
+  DocumentReference<Map<String, dynamic>> story(String id) => stories.doc(id);
+
+  /// The picture, in its own document. Firestore reads whole documents, so
+  /// keeping it apart is what makes listing the feed cheap.
+  DocumentReference<Map<String, dynamic>> storyImage(String id) =>
+      story(id).collection('media').doc('image');
 
   CollectionReference<Map<String, dynamic>> get tickets => db.collection('tickets');
   DocumentReference<Map<String, dynamic>> ticket(String id) => tickets.doc(id);

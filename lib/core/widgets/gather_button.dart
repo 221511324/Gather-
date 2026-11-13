@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
+import '../l10n/tr.dart';
 
 /// The primary pill button.
 ///
@@ -25,7 +26,15 @@ class GatherButton extends StatefulWidget {
 
   final String label;
 
-  /// May return a Future — the button shows a spinner until it settles.
+  /// May return a Future — the button shows a spinner until it settles, and
+  /// stays disabled while it does.
+  ///
+  /// Hand it the work itself, never a navigation future: `void` is a top type,
+  /// so an arrow body silently returns whatever `context.push` gives back, and
+  /// go_router drops a push future's completer whenever the stack is replaced
+  /// (`pushReplacement`, `go`) instead of popped. That future then never
+  /// settles and the button is left spinning for the rest of the run. Navigate
+  /// from a block body so nothing is returned.
   final FutureOr<void> Function()? onPressed;
   final IconData? icon;
   final Color? color;
@@ -92,8 +101,13 @@ class _GatherButtonState extends State<GatherButton> {
                   Icon(widget.icon, size: widget.compact ? 17 : 20),
                   const SizedBox(width: Insets.sm),
                 ],
+                // Shrinks a label that does not fit (Arabic runs wider) rather
+                // than cutting it off; a label that fits is drawn as is.
                 Flexible(
-                  child: Text(widget.label, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(context.tr(widget.label), maxLines: 1),
+                  ),
                 ),
               ],
             ),
@@ -143,7 +157,12 @@ class GatherOutlineButton extends StatelessWidget {
             Icon(icon, size: compact ? 17 : 20),
             const SizedBox(width: Insets.sm),
           ],
-          Flexible(child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis)),
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(context.tr(label), maxLines: 1),
+            ),
+          ),
         ],
       ),
     );
@@ -185,6 +204,6 @@ class SoftIconButton extends StatelessWidget {
         ),
       ),
     );
-    return tooltip == null ? widget : Tooltip(message: tooltip!, child: widget);
+    return tooltip == null ? widget : Tooltip(message: context.tr(tooltip!), child: widget);
   }
 }

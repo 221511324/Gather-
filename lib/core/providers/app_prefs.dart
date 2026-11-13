@@ -2,7 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Device-local preferences that have to be known before the first frame —
-/// currently just whether onboarding has been shown.
+/// whether onboarding has been shown — and which food stories this device has
+/// already watched (US19), which is per device by design, like a read marker.
 class AppPrefs {
   AppPrefs(this._prefs);
 
@@ -13,6 +14,13 @@ class AppPrefs {
   bool get hasSeenOnboarding => _prefs.getBool(_onboardingKey) ?? false;
 
   Future<void> markOnboardingSeen() => _prefs.setBool(_onboardingKey, true);
+
+  static const _seenStoriesKey = 'seen_story_ids';
+
+  List<String> get seenStoryIds => _prefs.getStringList(_seenStoriesKey) ?? const [];
+
+  Future<void> setSeenStoryIds(List<String> ids) =>
+      _prefs.setStringList(_seenStoriesKey, ids);
 
   static Future<AppPrefs> load() async => AppPrefs(await SharedPreferences.getInstance());
 }

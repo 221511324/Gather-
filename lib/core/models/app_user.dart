@@ -1,4 +1,5 @@
 import '../utils/parse.dart';
+import 'spin.dart';
 
 enum UserRole { customer, admin }
 
@@ -148,6 +149,7 @@ class AppUser {
     this.settings = const UserSettings(),
     this.lastSpinAt,
     this.createdAt,
+    this.mustVerifyEmail = false,
   });
 
   final String uid;
@@ -165,9 +167,14 @@ class AppUser {
   final AccountStatus status;
   final UserSettings settings;
 
-  /// Gates Spin & Win to one spin per calendar day (FR25).
+  /// Gates Spin & Win to one spin per rolling 24 hours (FR25).
   final DateTime? lastSpinAt;
   final DateTime? createdAt;
+
+  /// A new account that has not opened its verification link yet (FR1).
+  /// Accounts made before verification existed, and the administrator, never
+  /// have it. Only the database can let it be cleared: see firestore.rules.
+  final bool mustVerifyEmail;
 
   bool get isAdmin => role == UserRole.admin;
   bool get isSuspended => status == AccountStatus.suspended;
@@ -188,13 +195,12 @@ class AppUser {
     return (parts.first[0] + parts[1][0]).toUpperCase();
   }
 
-  /// True when the user has not spun the reward wheel yet today.
-  bool get canSpinToday {
-    final last = lastSpinAt;
-    if (last == null) return true;
-    final now = DateTime.now();
-    return !(last.year == now.year && last.month == now.month && last.day == now.day);
-  }
+  /// True when 24 hours have passed since the last spin (or there was none).
+  /// The name is historical: the window is rolling, not a calendar day.
+  bool get canSpinToday => SpinRules.canSpin(lastSpinAt, DateTime.now());
+
+  /// When the next spin opens, or null if one is open now.
+  DateTime? get nextSpinAt => SpinRules.nextSpinAt(lastSpinAt, DateTime.now());
 
   factory AppUser.fromMap(String uid, Map<String, dynamic> m) => AppUser(
         uid: uid,
@@ -211,6 +217,7 @@ class AppUser {
         settings: UserSettings.fromMap(Parse.map(m['settings'])),
         lastSpinAt: Parse.dateOrNull(m['lastSpinAt']),
         createdAt: Parse.dateOrNull(m['createdAt']),
+        mustVerifyEmail: Parse.boolean(m['mustVerifyEmail'], false),
       );
 
   Map<String, dynamic> toMap() => {
@@ -228,6 +235,7 @@ class AppUser {
         'settings': settings.toMap(),
         'lastSpinAt': lastSpinAt,
         'createdAt': createdAt,
+        'mustVerifyEmail': mustVerifyEmail,
       };
 
   AppUser copyWith({
@@ -259,5 +267,6 @@ class AppUser {
         settings: settings ?? this.settings,
         lastSpinAt: lastSpinAt ?? this.lastSpinAt,
         createdAt: createdAt,
+        mustVerifyEmail: mustVerifyEmail,
       );
 }

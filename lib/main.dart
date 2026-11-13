@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/app.dart';
 import 'core/providers/app_prefs.dart';
+import 'core/services/local_alerts.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -22,6 +23,9 @@ Future<void> main() async {
   // Loaded before the first frame so the router can decide, without a flash,
   // whether to open onboarding or sign-in.
   final prefs = await AppPrefs.load();
+
+  // The phone's own notifications for order updates (US16).
+  await LocalAlerts.instance.init();
 
   // The splash shows the logo immediately; decoding it lazily leaves an empty
   // card on screen for the first few frames.

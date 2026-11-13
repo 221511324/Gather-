@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
+import '../../core/l10n/tr.dart';
 import '../splash/splash_screen.dart';
 
 /// Shared chrome for the sign-in, sign-up and reset screens: a greeting on the
@@ -57,12 +58,12 @@ class AuthShell extends StatelessWidget {
                     height: 44,
                     child: showBack
                         ? Align(
-                            alignment: Alignment.centerLeft,
+                            alignment: AlignmentDirectional.centerStart,
                             child: IconButton(
                               onPressed: () => Navigator.of(context).maybePop(),
                               icon: const Icon(Icons.arrow_back_ios_new_rounded,
                                   color: Colors.white, size: 19),
-                              tooltip: 'Back',
+                              tooltip: context.tr('Back'),
                             ),
                           )
                         : null,
@@ -73,7 +74,7 @@ class AuthShell extends StatelessWidget {
                   ] else
                     const SizedBox(height: Insets.sm),
                   Text(
-                    greeting,
+                    context.tr(greeting),
                     style: AppType.display.copyWith(color: Colors.white, fontSize: 32),
                   ),
                 ],
@@ -97,7 +98,7 @@ class AuthShell extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title, style: AppType.title),
+                      Text(context.tr(title), style: AppType.title),
                       const SizedBox(height: Insets.xxl),
                       child,
                     ],

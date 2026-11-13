@@ -15,7 +15,8 @@ import 'package:gather/firebase_options.dart';
 
 /// The Sprint 1 user-story test cases, TC_U_001 to TC_U_021.
 ///
-/// Each one verifies an acceptance criterion from the project charter They run against
+/// Each one verifies an acceptance criterion from the project charter and is
+/// numbered to match `docs/Gather-Sprint-1-Unit-Testing.pdf`. They run against
 /// the live Firebase project, so every write is evaluated by the real security
 /// rules as the user who would be making it.
 ///

@@ -58,7 +58,7 @@ void main() {
 
     /// The tab that is actually drawn as selected, read off the widget tree.
     String? highlighted() {
-      for (final label in ['Home', 'Search', 'Group', 'Profile']) {
+      for (final label in ['Home', 'Search', 'Group', 'Orders', 'Profile']) {
         final finder = find.ancestor(
           of: find.text(label),
           matching: find.byType(Semantics),
@@ -77,6 +77,7 @@ void main() {
       'Home': '/home',
       'Search': '/search',
       'Group': '/group',
+      'Orders': '/orders',
       'Profile': '/profile',
     };
 
@@ -112,13 +113,13 @@ void main() {
     // 3. Push a full-screen route, come back, and confirm the bar recovers.
     router.go('/home');
     await settle();
-    router.push(Routes.editProfile);
+    router.push(Routes.cart);
     await settle();
     router.pop();
     await settle();
-    debugPrint('NAV after push round-trip location=${where()} highlighted=${highlighted()}');
+    debugPrint('NAV after cart round-trip location=${where()} highlighted=${highlighted()}');
     if (highlighted() != 'Home') {
-      problems.add('after returning from a pushed route, "${highlighted()}" was highlighted');
+      problems.add('after returning from the cart, "${highlighted()}" was highlighted');
     }
 
     await tester.pumpWidget(const SizedBox.shrink());

@@ -4,6 +4,7 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
 import 'gather_button.dart';
+import '../l10n/tr.dart';
 
 /// The empty state used across lists — a soft icon disc, a short headline and
 /// an optional action.
@@ -43,14 +44,14 @@ class EmptyView extends StatelessWidget {
               ),
               SizedBox(height: compact ? Insets.md : Insets.xl),
               Text(
-                title,
+                context.tr(title),
                 textAlign: TextAlign.center,
                 style: compact ? AppType.headline : AppType.subtitle.copyWith(fontWeight: FontWeight.w600),
               ),
               if (message != null) ...[
                 const SizedBox(height: Insets.sm),
                 Text(
-                  message!,
+                  context.tr(message!),
                   textAlign: TextAlign.center,
                   style: AppType.body.copyWith(color: AppColors.inkMuted, fontSize: 14.5),
                 ),
@@ -87,7 +88,7 @@ class LoadingView extends StatelessWidget {
             ),
             if (message != null) ...[
               const SizedBox(height: Insets.lg),
-              Text(message!, style: AppType.body.copyWith(color: AppColors.inkMuted)),
+              Text(context.tr(message!), style: AppType.body.copyWith(color: AppColors.inkMuted)),
             ],
           ],
         ),
@@ -130,19 +131,20 @@ class SectionHeader extends StatelessWidget {
         padding: padding,
         child: Row(
           children: [
-            Expanded(child: Text(title, style: AppType.title.copyWith(fontSize: 21))),
+            Expanded(child: Text(context.tr(title), style: AppType.title.copyWith(fontSize: 21))),
             if (actionLabel != null && onAction != null)
               TextButton(
                 onPressed: onAction,
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: Insets.sm),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  // The accessibility minimum (NFR12); the text stays small.
+                  minimumSize: const Size(48, 48),
+                  tapTargetSize: MaterialTapTargetSize.padded,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(actionLabel!, style: AppType.label.copyWith(color: AppColors.primary)),
+                    Text(context.tr(actionLabel!), style: AppType.label.copyWith(color: AppColors.primary)),
                     const Icon(Icons.chevron_right_rounded, size: 19, color: AppColors.primary),
                   ],
                 ),
@@ -187,7 +189,7 @@ class StatusPill extends StatelessWidget {
               const SizedBox(width: 4),
             ],
             Text(
-              label,
+              context.tr(label),
               style: (compact ? AppType.overline : AppType.label).copyWith(
                 color: color,
                 fontSize: compact ? 10.5 : 12.5,
@@ -223,7 +225,7 @@ abstract final class AppSnack {
               const SizedBox(width: Insets.md),
               Expanded(
                 child: Text(
-                  message,
+                  context.tr(message),
                   style: AppType.body.copyWith(color: Colors.white, fontSize: 14),
                 ),
               ),

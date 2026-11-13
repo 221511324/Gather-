@@ -1,9 +1,13 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/providers/providers.dart';
+import '../features/assistant/assistant_bubble.dart';
+import '../features/profile/notification_pop_up.dart';
 import 'router.dart';
+import 'theme/app_colors.dart';
 import 'theme/app_theme.dart';
 
 class GatherApp extends ConsumerStatefulWidget {
@@ -35,8 +39,8 @@ class _GatherAppState extends ConsumerState<GatherApp> {
 
     final router = ref.watch(routerProvider);
 
-    // The language chosen in settings drives Material's own strings and the
-    // layout direction. Gather's own copy is English only for now.
+    // The language chosen in settings drives Material's own strings, the
+    // layout direction, and Gather's own copy through `context.tr`.
     final language = ref.watch(currentUserProvider).valueOrNull?.settings.language ?? 'en';
 
     return MaterialApp.router(
@@ -55,11 +59,36 @@ class _GatherAppState extends ConsumerState<GatherApp> {
         // Keep the layout predictable if the device is set to a very large
         // font scale — the design relies on fixed-height bands and pills.
         final media = MediaQuery.of(context);
-        return MediaQuery(
+        final scaled = MediaQuery(
           data: media.copyWith(
             textScaler: media.textScaler.clamp(minScaleFactor: 0.9, maxScaleFactor: 1.25),
           ),
           child: child ?? const SizedBox.shrink(),
+        );
+
+        // On a monitor the screens would otherwise stretch to the full width
+        // and a text field would run for 2000 pixels. Hold the console to a
+        // page width and centre it.
+        // The food assistant floats over every customer page (it decides for
+        // itself where it may show). The website is the console, so not there.
+        if (!kIsWeb) {
+          return Stack(
+            children: [
+              scaled,
+              AssistantBubble(router: router),
+              // Order and group updates as they happen (US16).
+              NotificationPopUp(router: router),
+            ],
+          );
+        }
+        return ColoredBox(
+          color: AppColors.line,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1180),
+              child: Material(color: AppColors.background, child: scaled),
+            ),
+          ),
         );
       },
     );

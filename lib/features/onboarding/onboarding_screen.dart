@@ -6,6 +6,7 @@ import '../../app/router.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
+import '../../core/l10n/tr.dart';
 import '../../core/providers/app_prefs.dart';
 import '../../core/widgets/gather_button.dart';
 
@@ -74,10 +75,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         child: Column(
           children: [
             Align(
-              alignment: Alignment.centerRight,
+              alignment: AlignmentDirectional.centerEnd,
               child: TextButton(
                 onPressed: () => _finish(Routes.login),
-                child: Text('Skip', style: AppType.label.copyWith(color: AppColors.inkMuted)),
+                child: Text(context.tr('Skip'), style: AppType.label.copyWith(color: AppColors.inkMuted)),
               ),
             ),
             Expanded(
@@ -103,10 +104,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           child: Icon(slide.icon, size: 54, color: Colors.white),
                         ),
                         const SizedBox(height: Insets.xxxl),
-                        Text(slide.title, style: AppType.display.copyWith(fontSize: 30)),
+                        Text(context.tr(slide.title), style: AppType.display.copyWith(fontSize: 30)),
                         const SizedBox(height: Insets.lg),
                         Text(
-                          slide.body,
+                          context.tr(slide.body),
                           style: AppType.bodyLarge.copyWith(color: AppColors.inkMuted, height: 1.55),
                         ),
                       ],
@@ -151,11 +152,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     onPressed: () => _finish(Routes.login),
                     child: Text.rich(
                       TextSpan(
-                        text: 'Already have an account? ',
+                        text: context.tr('Already have an account? '),
                         style: AppType.body.copyWith(color: AppColors.inkMuted),
                         children: [
                           TextSpan(
-                            text: 'Log in',
+                            text: context.tr('Log in'),
                             style: AppType.label.copyWith(color: AppColors.primary),
                           ),
                         ],

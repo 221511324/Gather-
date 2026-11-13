@@ -69,8 +69,8 @@ class MemberAvatar extends StatelessWidget {
       clipBehavior: Clip.none,
       children: [
         avatar,
-        Positioned(
-          right: -1,
+        PositionedDirectional(
+          end: -1,
           bottom: -1,
           child: Container(
             width: size * 0.42,
@@ -116,13 +116,13 @@ class MemberAvatarStack extends StatelessWidget {
       child: Stack(
         children: [
           for (var i = 0; i < shown.length; i++)
-            Positioned(
-              left: i * (size - overlap),
+            PositionedDirectional(
+              start: i * (size - overlap),
               child: MemberAvatar.of(shown[i], size: size, borderColor: borderColor),
             ),
           if (overflow > 0)
-            Positioned(
-              left: shown.length * (size - overlap),
+            PositionedDirectional(
+              start: shown.length * (size - overlap),
               child: Container(
                 width: size,
                 height: size,

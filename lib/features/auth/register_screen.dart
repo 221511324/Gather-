@@ -9,6 +9,7 @@ import '../../app/router.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
+import '../../core/l10n/tr.dart';
 import '../../core/providers/providers.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/result.dart';
@@ -187,11 +188,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   onPressed: () => context.canPop() ? context.pop() : context.go(Routes.login),
                   child: Text.rich(
                     TextSpan(
-                      text: 'Already have an account? ',
+                      text: context.tr('Already have an account? '),
                       style: AppType.body.copyWith(color: AppColors.inkMuted),
                       children: [
                         TextSpan(
-                          text: 'Log in',
+                          text: context.tr('Log in'),
                           style: AppType.label.copyWith(color: AppColors.primary),
                         ),
                       ],

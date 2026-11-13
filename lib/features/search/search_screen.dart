@@ -6,6 +6,7 @@ import '../../app/router.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
+import '../../core/l10n/tr.dart';
 import '../../core/models/models.dart';
 import '../../core/providers/providers.dart';
 import '../../core/services/catalog_service.dart';
@@ -41,6 +42,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.watch(currentUserProvider).valueOrNull;
     final restaurants = ref.watch(restaurantsProvider).valueOrNull ?? const <Restaurant>[];
     final items = ref.watch(allMenuItemsProvider).valueOrNull ?? const <MenuItem>[];
     final loading = ref.watch(allMenuItemsProvider).isLoading && items.isEmpty;
@@ -82,6 +84,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   for (final r in restaurants) ...[
                     RestaurantCard(
                       restaurant: r,
+                      isFavorite: user?.favoriteRestaurantIds.contains(r.id) ?? false,
+                      onFavorite: user == null
+                          ? null
+                          : () => ref.read(catalogServiceProvider).toggleFavoriteRestaurant(
+                                user.uid,
+                                r.id,
+                                !(user.favoriteRestaurantIds.contains(r.id)),
+                              ),
                       onTap: () => context.push(Routes.restaurant(r.id)),
                     ),
                     const SizedBox(height: Insets.lg),
@@ -91,8 +101,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     EmptyView(
                       icon: Icons.search_off_rounded,
                       title: 'No matches',
-                      message: 'Nothing found for "${_controller.text.trim()}". '
-                          'Try a different word.',
+                      message: context.tr('Nothing found for "{query}". Try a different word.',
+                          {'query': _controller.text.trim()}),
                       actionLabel: 'Clear search',
                       onAction: () {
                         _controller.clear();
@@ -103,7 +113,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       },
                     ),
                   if (matchedRestaurants.isNotEmpty) ...[
-                    SectionHeader(title: 'Restaurants (${matchedRestaurants.length})'),
+                    SectionHeader(
+                        title: context.tr(
+                            'Restaurants ({count})', {'count': matchedRestaurants.length})),
                     for (final r in matchedRestaurants) ...[
                       RestaurantCard(
                         restaurant: r,
@@ -118,14 +130,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       children: [
                         Expanded(
                           child: SectionHeader(
-                            title: 'Dishes (${matchedItems.length})',
+                            title: context.tr('Dishes ({count})', {'count': matchedItems.length}),
                             padding: EdgeInsets.zero,
                           ),
                         ),
                         TextButton.icon(
                           onPressed: _openFilters,
                           icon: const Icon(Icons.sort_rounded, size: 18),
-                          label: Text(_sort.label, style: AppType.label.copyWith(fontSize: 13)),
+                          label: Text(context.tr(_sort.label), style: AppType.label.copyWith(fontSize: 13)),
                         ),
                       ],
                     ),
@@ -144,6 +156,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Future<void> _openFilters() async {
     final sort = await showModalBottomSheet<_SortBy>(
       context: context,
+      useRootNavigator: true,
       backgroundColor: AppColors.surface,
       builder: (context) => SafeArea(
         child: Column(
@@ -152,7 +165,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(Insets.gutter, Insets.sm, Insets.gutter, Insets.md),
-              child: Text('Sort dishes by', style: AppType.headline),
+              child: Text(context.tr('Sort dishes by'), style: AppType.headline),
             ),
             RadioGroup<_SortBy>(
               groupValue: _sort,
@@ -163,7 +176,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   for (final option in _SortBy.values)
                     RadioListTile<_SortBy>(
                       value: option,
-                      title: Text(option.label, style: AppType.bodyLarge.copyWith(fontSize: 15)),
+                      title: Text(context.tr(option.label), style: AppType.bodyLarge.copyWith(fontSize: 15)),
                       activeColor: AppColors.primary,
                       contentPadding: const EdgeInsets.symmetric(horizontal: Insets.gutter),
                     ),

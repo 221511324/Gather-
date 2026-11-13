@@ -2,14 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/router.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
+import '../../core/l10n/ar/qa1.dart';
+import '../../core/l10n/tr.dart';
 import '../../core/models/models.dart';
 import '../../core/providers/providers.dart';
+import '../../core/services/result.dart';
 import '../../core/utils/money.dart';
 import '../../core/widgets/cards.dart';
 import '../../core/widgets/food_image.dart';
+import '../../core/widgets/gather_button.dart';
 import '../../core/widgets/state_views.dart';
 import 'item_sheet.dart';
 
@@ -34,6 +39,8 @@ class _RestaurantScreenState extends ConsumerState<RestaurantScreen> {
   Widget build(BuildContext context) {
     final restaurantAsync = ref.watch(restaurantProvider(widget.restaurantId));
     final menuAsync = ref.watch(menuProvider(widget.restaurantId));
+    final user = ref.watch(currentUserProvider).valueOrNull;
+    final session = ref.watch(activeSessionProvider).valueOrNull;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -54,10 +61,11 @@ class _RestaurantScreenState extends ConsumerState<RestaurantScreen> {
             ..sort((a, b) => a.index.compareTo(b.index));
           final shown =
               _filter == null ? items : items.where((i) => i.category == _filter).toList();
+          final isFavorite = user?.favoriteRestaurantIds.contains(restaurant.id) ?? false;
 
           return CustomScrollView(
             slivers: [
-              _Header(restaurant: restaurant),
+              _Header(restaurant: restaurant, isFavorite: isFavorite, user: user),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(
@@ -66,8 +74,12 @@ class _RestaurantScreenState extends ConsumerState<RestaurantScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _Facts(restaurant: restaurant),
+                      if (session != null && session.stage.isLive) ...[
+                        const SizedBox(height: Insets.xl),
+                        _GroupActions(session: session, restaurant: restaurant),
+                      ],
                       const SizedBox(height: Insets.xl),
-                      Text('Menu', style: AppType.title.copyWith(fontSize: 21)),
+                      Text(context.tr('Menu'), style: AppType.title.copyWith(fontSize: 21)),
                     ],
                   ),
                 ),
@@ -81,13 +93,13 @@ class _RestaurantScreenState extends ConsumerState<RestaurantScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: Insets.gutter),
                       children: [
                         _FilterChip(
-                          label: 'All',
+                          label: context.tr('All'),
                           selected: _filter == null,
                           onTap: () => setState(() => _filter = null),
                         ),
                         for (final c in categories)
                           _FilterChip(
-                            label: c.label,
+                            label: context.tr(c.label),
                             selected: _filter == c,
                             onTap: () => setState(() => _filter = _filter == c ? null : c),
                           ),
@@ -116,8 +128,15 @@ class _RestaurantScreenState extends ConsumerState<RestaurantScreen> {
                     separatorBuilder: (_, _) => const SizedBox(height: Insets.md),
                     itemBuilder: (context, i) {
                       final item = shown[i];
+                      final fav = user?.favoriteItemIds.contains(item.id) ?? false;
                       return FoodRow(
                         item: item,
+                        isFavorite: fav,
+                        onFavorite: user == null
+                            ? null
+                            : () => ref
+                                .read(catalogServiceProvider)
+                                .toggleFavoriteItem(user.uid, item.id, !fav),
                         onTap: () => ItemSheet.show(context, item),
                         trailing: Container(
                           width: 32,
@@ -136,14 +155,17 @@ class _RestaurantScreenState extends ConsumerState<RestaurantScreen> {
           );
         },
       ),
+      bottomNavigationBar: const _CartBar(),
     );
   }
 }
 
 class _Header extends ConsumerWidget {
-  const _Header({required this.restaurant});
+  const _Header({required this.restaurant, required this.isFavorite, this.user});
 
   final Restaurant restaurant;
+  final bool isFavorite;
+  final AppUser? user;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => SliverAppBar(
@@ -158,14 +180,31 @@ class _Header extends ConsumerWidget {
             child: Icon(Icons.arrow_back_ios_new_rounded, size: 17, color: Colors.white),
           ),
           onPressed: () => context.pop(),
-          tooltip: 'Back',
+          tooltip: context.tr('Back'),
         ),
         actions: [
+          if (user != null)
+            IconButton(
+              icon: CircleAvatar(
+                backgroundColor: Colors.black26,
+                radius: 17,
+                child: Icon(
+                  isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                  size: 18,
+                  color: isFavorite ? AppColors.coral : Colors.white,
+                ),
+              ),
+              tooltip: context.tr(isFavorite ? 'Remove from favourites' : 'Add to favourites'),
+              onPressed: () => ref
+                  .read(catalogServiceProvider)
+                  .toggleFavoriteRestaurant(user!.uid, restaurant.id, !isFavorite),
+            ),
+          const SizedBox(width: Insets.sm),
         ],
         flexibleSpace: FlexibleSpaceBar(
           titlePadding: const EdgeInsets.symmetric(horizontal: 56, vertical: Insets.md),
           title: Text(
-            restaurant.name,
+            context.isolate(restaurant.name),
             style: AppType.headline.copyWith(color: Colors.white, fontSize: 16),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -203,10 +242,10 @@ class _Facts extends StatelessWidget {
   Widget build(BuildContext context) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(restaurant.cuisine, style: AppType.caption.copyWith(fontSize: 13)),
+          Text(context.isolate(restaurant.cuisine), style: AppType.caption.copyWith(fontSize: 13)),
           const SizedBox(height: Insets.sm),
           Text(
-            restaurant.description,
+            context.isolate(restaurant.description),
             style: AppType.bodyLarge.copyWith(
               color: AppColors.inkMuted,
               fontSize: 14.5,
@@ -219,25 +258,29 @@ class _Facts extends StatelessWidget {
               _Fact(
                 icon: Icons.star_rounded,
                 label: restaurant.rating.toStringAsFixed(1),
-                sub: '${restaurant.ratingCount} ratings',
+                sub: context.tr('{count} ratings', {'count': restaurant.ratingCount}),
                 color: AppColors.accent,
               ),
               _Fact(
                 icon: Icons.schedule_rounded,
-                label: restaurant.deliveryLabel,
-                sub: 'Delivery',
+                // Same text as Restaurant.deliveryLabel, with the unit translated.
+                label: context.tr('{from}–{to} min', {
+                  'from': restaurant.deliveryMinutes,
+                  'to': restaurant.deliveryMinutes + 10,
+                }),
+                sub: context.tr('Delivery'),
               ),
               _Fact(
                 icon: Icons.delivery_dining_rounded,
                 label: restaurant.deliveryFee == 0
-                    ? 'Free'
+                    ? context.tr('Free')
                     : Money.plain(restaurant.deliveryFee),
-                sub: 'Fee',
+                sub: context.tr('Fee'),
               ),
               _Fact(
                 icon: Icons.shopping_basket_outlined,
                 label: Money.plain(restaurant.minimumOrder),
-                sub: 'Minimum',
+                sub: context.tr('Minimum'),
               ),
             ],
           ),
@@ -271,6 +314,149 @@ class _Fact extends StatelessWidget {
       );
 }
 
+/// Suggest-for-the-wheel and host lock-in (FR10, US7).
+class _GroupActions extends ConsumerWidget {
+  const _GroupActions({required this.session, required this.restaurant});
+
+  final GroupSession session;
+  final Restaurant restaurant;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(currentUserProvider).valueOrNull;
+    if (user == null) return const SizedBox.shrink();
+
+    final isHost = session.isHostOf(user.uid);
+    final isChosen = session.restaurantId == restaurant.id;
+
+    // Each member puts one restaurant forward, so what this card offers
+    // depends on how the host decided the choice is being made and on whether
+    // this member has already used their pick.
+    final mode = session.decisionMode;
+    final mySuggestion = session.suggestionBy(user.uid);
+    final suggestedThisOne = mySuggestion?.restaurantId == restaurant.id;
+
+    if (isChosen) {
+      return Container(
+        padding: const EdgeInsets.all(Insets.md),
+        decoration: BoxDecoration(color: AppColors.successSoft, borderRadius: Radii.brMd),
+        child: Row(
+          children: [
+            const Icon(Icons.check_circle_rounded, size: 20, color: AppColors.success),
+            const SizedBox(width: Insets.sm),
+            Expanded(
+              child: Text(
+                context.tr('This is what "{session}" is ordering from', {'session': context.isolate(session.name)}),
+                style: AppType.caption.copyWith(color: AppColors.success, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return GatherCard(
+      padding: const EdgeInsets.all(Insets.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.groups_rounded, size: 19, color: AppColors.primary),
+              const SizedBox(width: Insets.sm),
+              Expanded(
+                child: Text(
+                  context.tr('You are in "{session}"', {'session': context.isolate(session.name)}),
+                  style: AppType.bodyStrong,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: Insets.md),
+          if (mode == null)
+            Text(
+              context.tr(isHost
+                  ? 'Open the session to choose whether to spin the wheel or '
+                      'pick the restaurant yourself.'
+                  : 'The host is deciding how the restaurant will be chosen.'),
+              style: AppType.caption,
+            )
+          else if (mode == RestaurantDecisionMode.spin && mySuggestion != null &&
+              !suggestedThisOne)
+            Text(
+              context.tr(
+                  'You have already suggested {restaurant}. '
+                  'Each member puts one restaurant forward — remove yours in the '
+                  'session to swap it.',
+                  {'restaurant': context.isolate(mySuggestion.restaurantName)}),
+              style: AppType.caption,
+            ),
+          if (mode != null)
+          Row(
+            children: [
+              if (mode == RestaurantDecisionMode.spin)
+                Expanded(
+                  child: GatherOutlineButton(
+                    label: suggestedThisOne
+                        ? 'Your suggestion'
+                        : (mySuggestion != null ? 'One each' : 'Suggest this'),
+                    icon: suggestedThisOne ? Icons.check_rounded : Icons.add_rounded,
+                    compact: true,
+                    onPressed: mySuggestion != null
+                        ? null
+                        : () async {
+                            final result = await ref.read(sessionServiceProvider)
+                                .suggestRestaurant(
+                                  sessionId: session.id,
+                                  restaurant: restaurant,
+                                  by: user,
+                                );
+                            if (!context.mounted) return;
+                            switch (result) {
+                              case Err(:final message):
+                                AppSnack.error(context, message);
+                              case Ok():
+                                AppSnack.show(context, 'Added to the wheel');
+                            }
+                          },
+                  ),
+                ),
+              if (isHost && mode == RestaurantDecisionMode.hostChoice) ...[
+                Expanded(
+                  child: GatherButton(
+                    label: 'Order here',
+                    compact: true,
+                    onPressed: () async {
+                      final result = await ref.read(sessionServiceProvider).chooseRestaurant(
+                            sessionId: session.id,
+                            restaurant: restaurant,
+                          );
+                      if (!context.mounted) return;
+                      switch (result) {
+                        case Err(:final message):
+                          AppSnack.error(context, message);
+                        case Ok():
+                          if (context.mounted) {
+                            AppSnack.show(
+                                context,
+                                context.tr('The group is ordering from {restaurant}',
+                                    {'restaurant': context.isolate(restaurant.name)}));
+                          }
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _FilterChip extends StatelessWidget {
   const _FilterChip({required this.label, required this.selected, required this.onTap});
 
@@ -280,7 +466,7 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(right: Insets.sm),
+        padding: const EdgeInsetsDirectional.only(end: Insets.sm),
         child: ChoiceChip(
           label: Text(label),
           selected: selected,
@@ -295,4 +481,36 @@ class _FilterChip extends StatelessWidget {
           side: BorderSide(color: selected ? AppColors.primary : AppColors.line),
         ),
       );
+}
+
+/// Sticky summary of whichever cart the user is filling.
+class _CartBar extends ConsumerWidget {
+  const _CartBar();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final session = ref.watch(activeSessionProvider).valueOrNull;
+    final inSession = session != null && session.stage.isLive && session.hasRestaurant;
+
+    final lines = inSession
+        ? (ref.watch(sessionLinesProvider(session.id)).valueOrNull ?? const [])
+        : (ref.watch(cartProvider).valueOrNull ?? const []);
+    if (lines.isEmpty) return const SizedBox.shrink();
+
+    final count = lines.fold<int>(0, (acc, l) => acc + l.quantity);
+    final total = lines.fold<double>(0, (acc, l) => acc + l.lineTotal);
+
+    return SafeArea(
+      minimum: const EdgeInsets.fromLTRB(Insets.gutter, 0, Insets.gutter, Insets.md),
+      child: GatherButton(
+        label: context.tr(count == 1 ? '{count} item · {total}' : '{count} items · {total}|${countNote(count)}',
+                {'count': count, 'total': Money.format(total)}) +
+            (inSession ? '  ·  ${context.tr('Group cart')}' : ''),
+        icon: Icons.shopping_bag_rounded,
+        onPressed: () {
+          context.push(inSession ? Routes.sessionCart(session.id) : Routes.cart);
+        },
+      ),
+    );
+  }
 }

@@ -8,6 +8,7 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
 import '../../core/models/models.dart';
+import '../../core/l10n/tr.dart';
 import '../../core/providers/providers.dart';
 import '../../core/services/result.dart';
 import '../../core/widgets/cards.dart';
@@ -25,6 +26,7 @@ class InviteSheet extends ConsumerStatefulWidget {
   static Future<void> show(BuildContext context, GroupSession session) =>
       showModalBottomSheet<void>(
         context: context,
+        useRootNavigator: true,
         isScrollControlled: true,
         backgroundColor: AppColors.surface,
         builder: (_) => InviteSheet(session: session),
@@ -65,7 +67,8 @@ class _InviteSheetState extends ConsumerState<InviteSheet> {
         setState(() => _error = message);
       case Ok(:final value):
         if (widget.session.hasMember(value.uid)) {
-          setState(() => _error = '${value.fullName} is already in this session');
+          setState(() => _error =
+              context.tr('{name} is already in this session', {'name': context.isolate(value.fullName)}));
           return;
         }
         setState(() => _found = value);
@@ -90,7 +93,8 @@ class _InviteSheetState extends ConsumerState<InviteSheet> {
             _found = null;
             _lookup.clear();
           });
-          AppSnack.show(context, 'Invitation sent to ${invitee.username}');
+          AppSnack.show(
+              context, context.tr('Invitation sent to {username}', {'username': context.isolate(invitee.username)}));
         }
     }
   }
@@ -111,13 +115,25 @@ class _InviteSheetState extends ConsumerState<InviteSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Invite people', style: AppType.headline),
+            Text(context.tr('Invite people'), style: AppType.headline),
             const SizedBox(height: Insets.xs),
-            Text('Four ways to get everyone into this session.', style: AppType.caption),
+            Text(
+              widget.session.isFull
+                  ? context.tr('This session is full — it already has {count} people.',
+                      {'count': GroupSession.maxMembers})
+                  : context.tr(
+                      widget.session.placesLeft == 1
+                          ? 'Four ways to get everyone into this session. {count} place left.'
+                          : 'Four ways to get everyone into this session. {count} places left.',
+                      {'count': widget.session.placesLeft}),
+              style: AppType.caption.copyWith(
+                color: widget.session.isFull ? AppColors.danger : null,
+              ),
+            ),
             const SizedBox(height: Insets.xl),
 
             // 1 — the code.
-            Text('SESSION CODE', style: AppType.overline),
+            Text(context.tr('SESSION CODE'), style: AppType.overline),
             const SizedBox(height: Insets.sm),
             _CodeDisplay(code: widget.session.code),
             const SizedBox(height: Insets.xl),
@@ -144,9 +160,12 @@ class _InviteSheetState extends ConsumerState<InviteSheet> {
                     compact: true,
                     onPressed: () => SharePlus.instance.share(
                       ShareParams(
-                        text: 'Join my Gather order "${widget.session.name}"\n'
-                            'Code: ${widget.session.code}\n$link',
-                        subject: 'Join my Gather order',
+                        text: context.tr('Join my Gather order "{name}"\nCode: {code}\n{link}', {
+                          'name': widget.session.name,
+                          'code': widget.session.code,
+                          'link': link,
+                        }),
+                        subject: context.tr('Join my Gather order'),
                       ),
                     ),
                   ),
@@ -158,7 +177,7 @@ class _InviteSheetState extends ConsumerState<InviteSheet> {
             const SizedBox(height: Insets.lg),
 
             // 3 and 4 — username or phone number.
-            Text('ADD BY USERNAME OR PHONE', style: AppType.overline),
+            Text(context.tr('ADD BY USERNAME OR PHONE'), style: AppType.overline),
             const SizedBox(height: Insets.sm),
             Row(
               children: [
@@ -166,9 +185,9 @@ class _InviteSheetState extends ConsumerState<InviteSheet> {
                   child: TextField(
                     controller: _lookup,
                     textInputAction: TextInputAction.search,
-                    decoration: const InputDecoration(
-                      hintText: 'username or +9665…',
-                      prefixIcon: Icon(Icons.person_search_outlined, size: 20),
+                    decoration: InputDecoration(
+                      hintText: context.tr('username or +9665…'),
+                      prefixIcon: const Icon(Icons.person_search_outlined, size: 20),
                     ),
                     onSubmitted: (_) => _search(),
                   ),
@@ -185,7 +204,7 @@ class _InviteSheetState extends ConsumerState<InviteSheet> {
             ),
             if (_error != null) ...[
               const SizedBox(height: Insets.sm),
-              Text(_error!, style: AppType.caption.copyWith(color: AppColors.danger)),
+              Text(context.tr(_error!), style: AppType.caption.copyWith(color: AppColors.danger)),
             ],
             if (_found != null) ...[
               const SizedBox(height: Insets.md),
@@ -205,8 +224,8 @@ class _InviteSheetState extends ConsumerState<InviteSheet> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(_found!.fullName, style: AppType.bodyStrong),
-                          Text('@${_found!.username}', style: AppType.caption),
+                          Text(context.isolate(_found!.fullName), style: AppType.bodyStrong),
+                          Text(context.isolate('@${_found!.username}'), style: AppType.caption),
                         ],
                       ),
                     ),
@@ -248,8 +267,10 @@ class _CodeDisplay extends StatelessWidget {
           ),
           child: Column(
             children: [
+              // Digits read left to right in either language.
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
+                textDirection: TextDirection.ltr,
                 children: [
                   for (final digit in code.split(''))
                     Container(
@@ -269,7 +290,7 @@ class _CodeDisplay extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: Insets.sm),
-              Text('Tap to copy', style: AppType.caption.copyWith(fontSize: 11.5)),
+              Text(context.tr('Tap to copy'), style: AppType.caption.copyWith(fontSize: 11.5)),
             ],
           ),
         ),

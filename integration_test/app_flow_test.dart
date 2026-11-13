@@ -138,11 +138,11 @@ void main() {
     await tester.tap(submit);
     await tester.pump();
 
-    // "Eating with people?" only exists on the home screen, so it is an
+    // The story row only exists on the home screen, so it is an
     // unambiguous signal that sign-up succeeded and the router moved on.
     await waitFor(
       tester,
-      find.text('Eating with people?'),
+      find.byKey(const ValueKey('story-rail')),
       timeout: const Duration(seconds: 45),
       because: 'the home screen after sign-up',
     );
@@ -150,15 +150,15 @@ void main() {
     expect(FirebaseAuth.instance.currentUser, isNotNull,
         reason: 'sign-up should leave the user authenticated');
 
-    // The catalogue seeds itself on first sign-in.
-    await waitFor(
-      tester,
-      find.text('Best sellers'),
-      timeout: const Duration(seconds: 60),
-      because: 'the seeded catalogue',
-    );
-    // The "Restaurants" section lives below the fold, so assert on the data
-    // rather than on widgets a ListView has not built yet.
+    // The catalogue seeds itself on first sign-in. Stories and the daily
+    // spin now sit at the top of home, so the catalogue's sections are below
+    // the fold on a small phone: wait on the data rather than on widgets a
+    // ListView has not built yet.
+    for (var i = 0; i < 400; i++) {
+      final seeded = container.read(restaurantsProvider).valueOrNull ?? const [];
+      if (seeded.isNotEmpty) break;
+      await tester.pump(const Duration(milliseconds: 150));
+    }
     final restaurants = container.read(restaurantsProvider).valueOrNull ?? const [];
     final items = container.read(allMenuItemsProvider).valueOrNull ?? const [];
     expect(restaurants, isNotEmpty, reason: 'the catalogue should have seeded');
