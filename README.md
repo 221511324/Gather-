@@ -1,505 +1,291 @@
 # Gather – Group Food Ordering Application
 
-Gather is a mobile food-ordering application developed as a senior project at Prince Sultan University (PSU). It is designed to make ordering food with friends easier by allowing users to create or join group sessions, browse restaurants, select meals, and manage their orders together.
+## Overview
 
-Instead of coordinating everyone's choices separately, Gather brings the group into one shared ordering experience. Each participant can add and manage their own food items, while the host coordinates the restaurant selection and payment arrangement.
+Gather is a mobile application designed to simplify group food ordering by bringing the entire ordering process into one shared experience. Instead of having each person browse restaurants, decide what to order, and coordinate payments separately, Gather allows friends to organize their food orders through a shared group session.
 
----
+The application enables users to discover restaurants, create or join group sessions, add food items to a shared cart, select a payment arrangement, and follow order progress. It also provides additional features such as an AI food assistant, food stories, rewards, vouchers, notifications, and an administrative dashboard.
 
-## Table of Contents
-
-- [Project Overview](#project-overview)
-- [Main Features](#main-features)
-- [Technology Stack](#technology-stack)
-- [Application Architecture](#application-architecture)
-- [AI Assistant Implementation](#ai-assistant-implementation)
-- [Firebase and Database](#firebase-and-database)
-- [Payment Implementation](#payment-implementation)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [Firebase Configuration](#firebase-configuration)
-- [Gemini API Configuration](#gemini-api-configuration)
-- [Running the Application](#running-the-application)
-- [Testing](#testing)
-- [Development Commands](#development-commands)
-- [Project Team](#project-team)
+Gather was developed as a Senior Graduation Project at Prince Sultan University using Flutter and Firebase.
 
 ---
-
-## Project Overview
-
-Gather addresses common difficulties in group food ordering, such as collecting individual meal choices, deciding on a restaurant, organizing shared orders, and dividing the total cost.
-
-The application provides a shared environment where users can:
-
-1. Create a group ordering session.
-2. Invite friends using a session code or invitation link.
-3. Browse available restaurants and menus.
-4. Add food items to a shared group cart.
-5. Participate in restaurant selection.
-6. Choose a payment arrangement.
-7. Follow order progress.
-8. Use additional features such as the AI food assistant, rewards, and Food Stories.
-
-The application supports both English and Arabic.
 
 ## Main Features
 
-### 1. User Accounts and Profiles
+### 1. User Authentication and Profile Management
+
+Users can create accounts, log in, and access their personal profiles.
+
+Features include:
 
 - User registration and login.
-- Authentication using Firebase Authentication.
-- User profile viewing and editing.
-- Username-based user lookup.
-- Account settings and language preferences.
-- Personal payment methods and saved information.
+- User profile management.
+- Username management.
+- Account-related settings.
+- English and Arabic language support.
 
-### 2. Restaurant Browsing
+### 2. Restaurant Browsing and Menus
 
-- Browse available restaurants.
-- View restaurant information and menus.
-- Search for restaurants and food items.
-- View food descriptions, prices, ratings, and availability.
-- Explore best-selling and recommended food items.
-- Add restaurants and dishes to favourites.
+Users can explore available restaurants and browse their menus before starting or joining a group order.
+
+Features include:
+
+- Restaurant listings.
+- Restaurant details.
+- Menu categories.
+- Food item details.
+- Favorites for preferred restaurants.
 
 ### 3. Group Ordering Sessions
 
-- Create a group session as the host.
-- Generate a unique four-digit session code.
-- Invite other users through a shareable link or session code.
-- Find and invite users by username.
-- Join an existing session using its four-digit code.
-- View group members and their participation.
-- Manage the session as the host.
+Group ordering is the main functionality of Gather.
 
-### 4. Shared Cart
+A user can create a group session and become its host. The application generates a unique four-digit session code that other users can use to join.
 
-- Add food items to the group order.
-- Allow participants to manage their own cart items.
-- Display the group's selected items in a shared session.
-- Update quantities and item details.
-- Keep group order information synchronized through Cloud Firestore.
+The group session allows participants to:
 
-Each participant manages their own items, while the host has additional control over the overall session.
+- Create a group order.
+- Join an existing session using its code.
+- View the shared group session.
+- Browse restaurants and select food.
+- Coordinate their orders with other participants.
 
-### 5. Restaurant Selection
+The host has additional session-management permissions.
 
-- Allow group members to suggest restaurants.
-- Support group participation in restaurant decisions.
-- Allow the host to manage the final restaurant selection.
-- Include the Restaurant Spin feature to help groups decide where to order.
+### 4. Shared Shopping Cart
 
-### 6. Payment Options
+Gather provides a shared cart where all participants can coordinate their food selections.
 
-Gather supports different ways to divide the group order:
+Each participant can:
 
-- **Individual Payment:** Each participant pays for the items they selected.
+- Add food items to the group cart.
+- Edit their own cart items.
+- Remove their own items.
+- View the items added by other participants.
+- Follow the group's order selections.
+
+This approach keeps the group order organized and allows participants to manage their individual selections.
+
+### 5. Payment Options
+
+Gather provides three payment arrangements for group orders:
+
+- **Individual Payment:** Each participant is responsible for their own order.
 - **Equal Split:** The total amount is divided equally among participants.
-- **Host Pays:** The host covers the group's total amount.
+- **Host Pays:** The host is responsible for the group order.
 
-The application also supports payment methods managed through the administrator functionality.
+Payment operations are simulated within the application for demonstration purposes. Gather does not process real financial transactions or connect to a live payment gateway.
 
-**Note:** Payment processing in the current application is simulated. Gather does not connect to a live payment gateway or process real financial transactions.
+### 6. Order Tracking
 
-### 7. Orders and Tracking
+Users can follow the progress of their group orders through the application's order-tracking functionality.
 
-- View order information.
-- Follow order status and progress.
-- Display delivery progress.
-- Provide order-related notifications.
+The application displays order progress and related status updates. Tracking is handled within Gather and does not depend on an external delivery provider API.
 
-The application includes simulated delivery progress rather than a connection to an external delivery provider.
+### 7. Saved Group Sessions
 
-### 8. Saved Sessions and Favourites
+Users can save group sessions and access their saved sessions later.
 
-- Save group sessions for later access.
-- View previously saved sessions.
-- Manage favourite restaurants and food items.
+This feature helps users keep track of previous group-order activities.
+
+### 8. Favorites
+
+Users can save their preferred restaurants for easier access when browsing available restaurants.
 
 ### 9. AI Food Assistant
 
-The AI assistant helps users discover food, receive recommendations, and understand how to use Gather.
+Gather includes an AI-powered food assistant integrated with Google Gemini.
 
-It supports:
-- Food and dish recommendations.
-- Restaurant-related questions.
-- Recommendations based on food categories.
-- Budget-based food filtering.
-- Popular and highly rated food suggestions.
-- Questions about using Gather.
-- English and Arabic responses.
+The assistant helps users make food decisions and supports the group-ordering experience.
 
-The assistant uses Gather's restaurant and menu catalogue to provide relevant answers.
+Its capabilities include:
 
-The AI implementation is explained in detail in the [AI Assistant Implementation](#ai-assistant-implementation) section.
+- Providing food recommendations.
+- Suggesting available restaurant menu items.
+- Helping users choose food based on their preferences.
+- Answering questions about restaurants and food.
+- Assisting users with questions about using Gather.
+- Supporting English and Arabic conversations.
 
-### 10. Spin & Win Rewards
+The assistant uses available restaurant and menu information to provide relevant recommendations.
 
-- Allow users to participate in the Spin & Win feature.
-- Provide rewards and vouchers.
-- Manage reward information through the application.
-- Apply reward-related rules to user participation.
+**AI Implementation**
 
-### 11. Food Stories
+The application uses a service-based architecture for the assistant:
 
-- Allow users to share food-related stories.
-- Display stories within the application.
-- Provide a social-style way to share food experiences.
+`AssistantScreen → AssistantService → AssistantBrain`
 
-### 12. Notifications
+The application supports two assistant implementations:
 
-- Receive notifications related to orders and group activity.
-- Display notification information inside the application.
-- Support local notifications for order updates.
+- **GeminiBrain:** Communicates with Google Gemini using an HTTP request.
+- **RetrievalBrain:** A local rule-based assistant that provides fallback responses.
 
-### 13. Administrator Features
+When a valid Gemini API key is configured, the application can use Gemini. If the key is unavailable or a request fails, the application falls back to the local assistant.
 
-The administrator functionality provides management capabilities, including:
+The Gemini API key is not included in the public repository. Developers must configure their own key locally.
 
-- Manage restaurant and menu catalogue information.
-- Manage users and administrative roles.
-- Monitor group sessions and orders.
-- Manage available payment methods.
-- Manage rewards and vouchers.
-- Manage support requests.
-- Control application-related administrative information.
+### 10. Food Stories
+
+Gather includes a food stories feature that allows users to upload and share food pictures.
+
+Stories provide a social element within the application and allow users to share food-related content.
+
+Story records are stored in the root-level `stories` collection in Cloud Firestore.
+
+### 11. Spin & Win
+
+The Spin & Win feature provides users with an interactive spinning wheel through which they can receive available rewards and vouchers.
+
+The feature is designed to make the food-ordering experience more engaging.
+
+### 12. Vouchers and Rewards
+
+Users can access available vouchers and rewards through the application.
+
+The rewards functionality is connected to the Spin & Win feature.
+
+### 13. Notifications
+
+Gather includes a notification feature to keep users informed about relevant application activities and updates.
+
+### 14. Admin Dashboard
+
+Gather includes administrative functionality for managing application data and settings.
+
+The administrative features include:
+
+- Managing restaurant information.
+- Managing payment methods.
+- Adding new accepted payment methods.
+- Enabling and disabling payment methods.
+- Managing administrative application data.
+
+Payment methods are managed dynamically through the application's administrative functionality rather than requiring changes to the application code whenever a new method is added.
+
+### 15. Application Settings
+
+Users can access application settings to manage their preferences.
+
+The application supports language selection between English and Arabic.
 
 ---
 
 ## Technology Stack
 
-| Category | Technology |
-|---|---|
-| Frontend | Flutter |
-| Programming Language | Dart |
-| State Management | Riverpod |
-| Navigation | GoRouter |
-| Authentication | Firebase Authentication |
-| Database | Cloud Firestore |
-| AI Integration | Google Gemini |
-| HTTP Communication | HTTP package |
-| Local Preferences | Shared Preferences |
-| Unique Identifiers | UUID |
-| Date and Number Formatting | Intl |
-| Testing | Flutter Test and Integration Test |
-| Version Control | Git and GitHub |
-
-### Main Dependencies
-
-The application uses the following packages, defined in `pubspec.yaml`:
-
-- `firebase_core`
-- `firebase_auth`
-- `cloud_firestore`
-- `flutter_riverpod`
-- `go_router`
-- `intl`
-- `uuid`
-- `collection`
-- `shared_preferences`
-- `cached_network_image`
-- `share_plus`
-- `http`
+| Technology              | Purpose                                       |
+| ----------------------- | --------------------------------------------- |
+| Flutter                 | Cross-platform mobile application development |
+| Dart                    | Main programming language                     |
+| Firebase Authentication | User authentication                           |
+| Cloud Firestore         | Cloud database and data management            |
+| Google Gemini           | AI-powered food assistant                     |
+| Riverpod                | Application state management                  |
+| GoRouter                | Application navigation                        |
+| HTTP                    | Communication with the Gemini API             |
+| Shared Preferences      | Local preference storage                      |
 
 ---
 
 ## Application Architecture
 
-Gather follows a service-oriented Flutter application structure.
+Gather follows a structured architecture that separates the user interface, state management, application logic, and data operations.
 
-The application separates its interface, data models, state management, and business logic into different areas.
+### Presentation Layer
 
-### Architecture Layers
+The presentation layer contains the application's screens and user interface components. It handles user interactions and displays application data.
 
-**1. Presentation Layer**
+### State Management Layer
 
-Contains the application screens and user interface components. It is responsible for displaying information and handling user interactions.
+Riverpod is used to manage application state and provide application services to the relevant screens.
 
-**2. State Management Layer**
+### Service Layer
 
-Riverpod manages application state and provides access to application services and data.
+The service layer contains the main application operations, keeping business logic separate from the user interface.
 
-**3. Service Layer**
+It includes services responsible for:
 
-Contains the main application logic, including authentication, sessions, restaurants, cart management, orders, payments, notifications, rewards, and the AI assistant.
+- Authentication.
+- Restaurant catalogues.
+- Group sessions.
+- Shopping carts.
+- Orders.
+- Payments.
+- Notifications.
+- AI assistance.
+- Food stories.
+- Vouchers and rewards.
+- Administrative operations.
+- Support functionality.
 
-**4. Data Layer**
+### Backend and Data Layer
 
-Cloud Firestore stores and synchronizes application information, while Firebase Authentication manages user authentication.
+Firebase provides the backend services used by Gather.
 
-### Main Service Files
-
-| File | Responsibility |
-|---|---|
-| `auth_service.dart` | User authentication and profile operations |
-| `catalog_service.dart` | Restaurant and menu catalogue |
-| `session_service.dart` | Group session management |
-| `cart_service.dart` | Cart operations |
-| `order_service.dart` | Order management and calculations |
-| `payment_service.dart` | Payment options and simulated payment processing |
-| `admin_service.dart` | Administrative operations |
-| `assistant_service.dart` | AI assistant interface and local recommendation logic |
-| `gemini_brain.dart` | Google Gemini integration |
-| `notification_service.dart` | Application notifications |
-| `story_service.dart` | Food Stories functionality |
-| `voucher_service.dart` | Voucher and reward management |
-| `spin_service.dart` | Spin & Win functionality |
-| `support_service.dart` | Support request management |
-| `seed_service.dart` | Initial catalogue setup |
+Firebase Authentication handles user authentication, while Cloud Firestore stores and retrieves application data.
 
 ---
 
-## AI Assistant Implementation
+## Firebase and Database Structure
 
-Gather includes an AI food assistant implemented using two interchangeable components:
+Gather uses Cloud Firestore as its cloud database.
 
-- `RetrievalBrain`
-- `GeminiBrain`
+The main Firestore root collections include:
 
-Both implement the `AssistantBrain` interface defined in:
+| Collection     | Purpose                          |
+| -------------- | -------------------------------- |
+| `users`        | User accounts and personal data  |
+| `restaurants`  | Restaurant information and menus |
+| `sessions`     | Group ordering sessions          |
+| `sessionCodes` | Group session joining codes      |
+| `orders`       | Order information                |
+| `tickets`      | Support-related information      |
+| `stories`      | Food stories shared by users     |
+| `meta`         | Application metadata             |
 
-`lib/core/services/assistant_service.dart`
+Additional data is organized through subcollections and documents.
 
-### 1. RetrievalBrain – Local Recommendation Logic
+User-related data includes:
 
-`RetrievalBrain` provides an on-device recommendation mechanism based on Gather's existing restaurant and menu catalogue.
+- Cart information.
+- Saved sessions.
+- Payment methods.
+- Notifications.
+- AI conversations.
+- Vouchers.
 
-It processes user questions using predefined matching logic.
+Restaurant documents contain menu information, while group sessions contain their related order lines.
 
-The implementation can:
+Food stories are stored in the root-level `stories` collection in Firestore.
 
-- Identify food categories such as desserts, drinks, snacks, meals, and vegan options.
-- Detect budget-related requests.
-- Search for dish names and ingredients.
-- Identify questions about specific restaurants.
-- Sort recommendations using price, ratings, and best-seller information.
-- Answer predefined questions about how to use Gather.
-
-This component does not require an external AI model or an API key.
-
-### 2. GeminiBrain – Google Gemini Integration
-
-The application also integrates Google's Gemini model.
-
-**Model used:** `gemini-3.5-flash-lite`
-
-The implementation is located in:
-
-`lib/core/services/gemini_brain.dart`
-
-Gemini is accessed through Google's `generateContent` REST endpoint using the HTTP package.
-
-The application sends the user's question together with relevant context from Gather's restaurant and food catalogue.
-
-The request includes:
-- System instructions describing the assistant's role.
-- The available restaurant and food catalogue.
-- Previous conversation messages.
-- The user's current question.
-- A structured JSON response schema.
-
-The response contains:
-- A text answer.
-- Recommended food item IDs.
-- Restaurant IDs.
-- An action describing the type of response.
-
-The application validates returned item and restaurant IDs against its own catalogue. Unknown IDs are discarded, preventing the assistant from displaying recommendations that do not exist in Gather's data.
-
-The assistant supports English and Arabic responses.
-
-### 3. Automatic Fallback Mechanism
-
-Gather is designed to keep the assistant available even when Gemini cannot respond.
-
-The application selects the assistant implementation through:
-
-`lib/core/providers/providers.dart`
-
-- If a usable Gemini API key is provided, the application uses `GeminiBrain`.
-- If a usable key is not available, the application uses `RetrievalBrain`.
-- If the Gemini request fails, times out, or returns an invalid response, the application falls back to `RetrievalBrain`.
-
-The Gemini request timeout is configured to 4.5 seconds.
-
-This approach allows Gather to provide food recommendations even when the external Gemini service is unavailable.
-
-### AI Assistant Source Files
-
-| File | Purpose |
-|---|---|
-| `assistant_service.dart` | Defines `AssistantBrain`, `AssistantContext`, `AssistantReply`, and `RetrievalBrain` |
-| `gemini_brain.dart` | Handles Gemini requests, catalogue context, structured responses, and fallback |
-| `providers.dart` | Selects the appropriate assistant implementation |
-| `assistant_message.dart` | Represents assistant conversation messages |
+Firestore security rules are used to control access to application data and protect user-specific operations.
 
 ---
 
-## Firebase and Database
+## AI Assistant Configuration
 
-Gather uses Firebase services for authentication and application data management.
+The Gemini API key is intentionally excluded from this public repository.
 
-### Firebase Authentication
+To enable Gemini integration, developers must configure their own API key.
 
-Firebase Authentication manages user sign-up, login, and authentication state.
+Create a file named `config/secrets.json` in the project root:
 
-### Cloud Firestore
-
-Cloud Firestore is the main database used to store and synchronize application data.
-
-The database contains collections and documents for:
-
-| Collection | Purpose |
-|---|---|
-| `users` | User profiles and account information |
-| `usernames` | Username lookup and uniqueness |
-| `restaurants` | Restaurant information |
-| `restaurants/{restaurantId}/menu` | Restaurant menu items |
-| `sessions` | Group ordering sessions |
-| `sessionCodes` | Four-digit session code lookup |
-| `orders` | Order information |
-| `vouchers` | Voucher information |
-| `tickets` | Support requests |
-| `meta` | Application metadata and catalogue setup |
-
-User-related subcollections include:
-
-- `cart`
-- `savedSessions`
-- `paymentMethods`
-- `aiChat`
-- `vouchers`
-- `notifications`
-
-Group sessions also contain a `lines` subcollection for shared cart items.
-
-### Real-Time Synchronization
-
-Cloud Firestore streams are used to keep relevant application information updated.
-
-For example, group members can see changes to the shared session and cart without manually refreshing the application.
-
-### Firestore Security Rules
-
-Database access is controlled through:
-
-`firestore.rules`
-
-The rules include:
-- Authentication checks.
-- User ownership restrictions.
-- Administrator role verification.
-- Session membership validation.
-- Host-specific permissions.
-- Restrictions on modifying other participants' cart items.
-- Protection of user privilege fields such as roles and account status.
-- A default deny rule for unmatched database paths.
-
-Firebase configuration files:
-
-- `firebase.json`
-- `firestore.rules`
-- `firestore.indexes.json`
-- `lib/firebase_options.dart`
-
-The Firebase project is configured for the Android, iOS, and web application targets.
-
----
-
-## Payment Implementation
-
-Gather provides three group payment arrangements: Individual Payment, Equal Split, and Host Pays.
-
-The payment implementation is organized in:
-
-`lib/core/services/payment_service.dart`
-
-The application uses a `PaymentGateway` abstraction and a `SimulatedPaymentGateway` implementation.
-
-This allows the application to demonstrate payment-related workflows without connecting to a real payment provider.
-
-Payment information and available payment methods are managed through the application's services and Firestore data.
-
-No real card transaction or external payment gateway processing is performed.
-
----
-
-## Project Structure
-
-The repository root contains the latest complete Gather application.
-
-```text
-Gather-/
-│
-├── android/
-├── ios/
-├── web/
-│
-├── assets/
-│   ├── images/
-│   └── fonts/
-│
-├── lib/
-│   ├── app/
-│   │   └── app.dart
-│   │
-│   ├── core/
-│   │   ├── models/
-│   │   ├── providers/
-│   │   │   ├── app_prefs.dart
-│   │   │   └── providers.dart
-│   │   │
-│   │   ├── services/
-│   │   │   ├── auth_service.dart
-│   │   │   ├── catalog_service.dart
-│   │   │   ├── session_service.dart
-│   │   │   ├── cart_service.dart
-│   │   │   ├── order_service.dart
-│   │   │   ├── payment_service.dart
-│   │   │   ├── admin_service.dart
-│   │   │   ├── assistant_service.dart
-│   │   │   ├── gemini_brain.dart
-│   │   │   ├── notification_service.dart
-│   │   │   ├── story_service.dart
-│   │   │   ├── voucher_service.dart
-│   │   │   ├── spin_service.dart
-│   │   │   └── support_service.dart
-│   │   │
-│   │   └── ...
-│   │
-│   ├── features/
-│   │   └── Application feature screens and components
-│   │
-│   ├── l10n/
-│   │   └── Localization resources
-│   │
-│   ├── firebase_options.dart
-│   └── main.dart
-│
-├── test/
-│   └── Unit and widget tests
-│
-├── integration_test/
-│   └── Integration and system tests
-│
-├── Sprint2/
-│   └── Sprint 2 project snapshot
-│
-├── Sprint3/
-│   └── Sprint 3 project snapshot
-│
-├── firebase.json
-├── firestore.rules
-├── firestore.indexes.json
-├── pubspec.yaml
-├── pubspec.lock
-├── analysis_options.yaml
-├── PHASE-1.md
-└── README.md
+```json
+{
+  "GEMINI_API_KEY": "YOUR_GEMINI_API_KEY"
+}
 ```
 
-**Note:** `Sprint2/` and `Sprint3/` are retained as sprint snapshots. The repository root is the main application to install and run.
+Replace `YOUR_GEMINI_API_KEY` with a valid API key.
+
+Make sure the file is included in `.gitignore`:
+
+```gitignore
+config/secrets.json
+```
+
+Never commit API keys or private credentials to GitHub.
+
+If no valid key is configured, the application can use its local rule-based assistant instead.
 
 ---
 
@@ -507,15 +293,13 @@ Gather-/
 
 ### Prerequisites
 
-Before running Gather, make sure the following tools are installed:
+Before running Gather, make sure you have:
 
-- Flutter SDK
-- Dart SDK
-- Android Studio or Visual Studio Code
-- Android emulator or a physical Android device
-- Xcode for iOS development on macOS
-- A Firebase project with Authentication and Cloud Firestore configured
-- A Google Gemini API key if Gemini-powered responses are required
+- Flutter SDK installed.
+- Dart SDK installed.
+- Android Studio or Visual Studio Code.
+- A configured Firebase project.
+- Git installed.
 
 ### 1. Clone the Repository
 
@@ -523,261 +307,118 @@ Before running Gather, make sure the following tools are installed:
 git clone https://github.com/221511324/Gather-.git
 ```
 
-Navigate to the project directory:
+### 2. Navigate to the Project Directory
 
 ```bash
 cd Gather-
 ```
 
-### 2. Install Dependencies
+### 3. Install Dependencies
 
 ```bash
 flutter pub get
 ```
 
-### 3. Check the Flutter Environment
+### 4. Configure Firebase
 
-```bash
-flutter doctor
-```
+Set up your Firebase project and configure the required Firebase application files.
 
-Resolve any required setup issues before running the application.
+### 5. Configure the Gemini API Key
 
----
+Create `config/secrets.json` and add your Gemini API key as described in the AI Assistant Configuration section.
 
-## Firebase Configuration
-
-The repository includes Firebase configuration files for the configured application platforms.
-
-The main Firebase initialization is performed in:
-
-`lib/main.dart`
-
-The application initializes Firebase using:
-
-```dart
-await Firebase.initializeApp(
-  options: DefaultFirebaseOptions.currentPlatform,
-);
-```
-
-The platform-specific Firebase options are defined in:
-
-`lib/firebase_options.dart`
-
-To use the application with Firebase:
-
-1. Make sure the Firebase project is accessible.
-2. Enable the Email/Password sign-in provider in Firebase Authentication.
-3. Create or enable the Cloud Firestore database.
-4. Deploy the Firestore security rules and indexes when setting up a new Firebase environment.
-
-To deploy Firestore rules and indexes, install and authenticate the Firebase CLI, then run:
-
-```bash
-firebase login
-firebase deploy --only firestore:rules,firestore:indexes
-```
-
-The repository's Firebase configuration is connected to the Gather project. If using a separate Firebase project, regenerate the platform configuration with the FlutterFire CLI.
-
----
-
-## Gemini API Configuration
-
-Gemini is optional because Gather includes the local `RetrievalBrain` fallback.
-
-To enable Gemini-powered responses, create a local configuration file.
-
-### 1. Create the Configuration Directory
-
-From the project root:
-
-```bash
-mkdir -p config
-```
-
-### 2. Create `config/secrets.json`
-
-```json
-{
-  "GEMINI_API_KEY": "PASTE_YOUR_GEMINI_API_KEY_HERE"
-}
-```
-
-Replace `PASTE_YOUR_GEMINI_API_KEY_HERE` with a valid API key from Google AI Studio.
-
-This value is a placeholder. It must be replaced with your own key.
-
-### 3. Protect the API Key
-
-Do not commit your actual API key to GitHub.
-
-Add the following line to `.gitignore`:
-
-```gitignore
-config/secrets.json
-```
-
-The API key is read in `gemini_brain.dart` using:
-
-```dart
-const geminiApiKey = String.fromEnvironment('GEMINI_API_KEY');
-```
-
-The application receives the value through Flutter's `--dart-define-from-file` option.
-
----
-
-## Running the Application
-
-### Run with Gemini Enabled
-
-After creating `config/secrets.json`, run:
+### 6. Run the Application
 
 ```bash
 flutter run --dart-define-from-file=config/secrets.json
 ```
 
-### Run Without Gemini
-
-To use the local recommendation assistant instead:
-
-```bash
-flutter run
-```
-
-Without a usable Gemini key, the application selects `RetrievalBrain`.
-
-### Run on a Specific Device
-
-First, list available devices:
-
-```bash
-flutter devices
-```
-
-Then run the application on the selected device:
-
-```bash
-flutter run -d DEVICE_ID
-```
-
-To run with Gemini on a specific device:
-
-```bash
-flutter run -d DEVICE_ID --dart-define-from-file=config/secrets.json
-```
-
-Replace `DEVICE_ID` with the identifier displayed by `flutter devices`.
-
 ---
 
 ## Testing
 
-Gather includes unit, widget, integration, and system-level test files.
+Gather was developed and evaluated through multiple testing stages, including unit testing, integration testing, and system testing.
 
-### 1. Unit and Widget Tests
+The final Sprint 3 testing report documents 60 test cases:
 
-The test files are located in:
+| Testing Type        | Number of Test Cases |
+| ------------------- | -------------------: |
+| Unit Testing        |                    3 |
+| Integration Testing |                   35 |
+| System Testing      |                   22 |
+| **Total**           |               **60** |
 
-`test/`
+All 60 test cases passed according to the final Sprint 3 testing report.
 
-They cover application logic and individual components, including:
-
-- AI assistant responses.
-- Gemini request and response handling.
-- Localization.
-- Date and money calculations.
-- Payment logic.
-- Reward rules.
-- Spin functionality.
-- Notifications.
-- UI components.
-
-Run the Flutter test suite:
-
-```bash
-flutter test
-```
-
-### 2. Integration and System Tests
-
-Integration tests are located in:
-
-`integration_test/`
-
-They cover application workflows and interactions, including:
-
-- Application navigation and routes.
-- User stories from different sprints.
-- Group session creation and joining.
-- Shared cart behavior.
-- Payment workflows.
-- AI assistant functionality.
-- Rewards and Spin & Win.
-- Stories.
-- Notifications and settings.
-- System and non-functional requirements.
-
-Run an individual integration test on a connected device:
-
-```bash
-flutter test integration_test/sprint3_system_tests.dart -d DEVICE_ID
-```
-
-Other integration test files can be executed individually by replacing the file name.
-
-Some integration tests require a configured Firebase environment and appropriate test data.
-
-### 3. Sprint 3 Testing Documentation
-
-The Sprint 3 testing documentation is maintained separately in the project deliverables.
-
-It records the Sprint 3 test cases, testing results, identified defects, and corrections.
+Testing covered application functionality, interactions between features, and overall application behavior.
 
 ---
 
-## Development Commands
+## Project Structure
 
-| Command | Description |
+The project is organized into separate directories for application code, platform configurations, tests, and Firebase configuration.
+
+```text
+Gather/
+│
+├── android/
+├── ios/
+├── assets/
+│
+├── lib/
+│   ├── core/
+│   │   ├── providers/
+│   │   └── services/
+│   │
+│   ├── features/
+│   │
+│   ├── main.dart
+│   └── firebase_options.dart
+│
+├── test/
+├── integration_test/
+│
+├── firebase.json
+├── firestore.rules
+├── pubspec.yaml
+└── README.md
+```
+
+---
+
+## Important Implementation Notes
+
+- Gather is a Flutter application backed by Firebase.
+- Group sessions use unique four-digit joining codes.
+- Participants manage their own food selections within a shared group cart.
+- The host has additional group-session permissions.
+- The application supports Individual Payment, Equal Split, and Host Pays.
+- Payment processing is simulated and does not involve real financial transactions.
+- Order tracking is handled within the application without an external delivery provider API.
+- Food stories are stored in the root-level Firestore `stories` collection.
+- Gemini integration requires a developer-provided API key.
+- The AI assistant has a local rule-based fallback when Gemini is unavailable.
+- The application supports English and Arabic.
+
+---
+
+## Project Supervision
+
+**Supervised by:**
+
+Dr. Zainab Masood
+
+## Prepared By
+
+| Student Name | Student ID |
 |---|---|
-| `flutter pub get` | Install project dependencies |
-| `flutter doctor` | Check Flutter development setup |
-| `flutter devices` | List connected devices |
-| `flutter run` | Run the application |
-| `flutter test` | Run unit and widget tests |
-| `flutter analyze` | Analyze Dart code |
-| `dart format lib test integration_test` | Format source and test files |
-| `flutter clean` | Remove generated build files |
+| Rama Alrashodi | 221410353 |
+| Mashael Aljarbou | 221410453 |
+| Reema Alnamazi | 221511324 |
+| Dana Albassam | 221511449 |
+| Tib Othman | 223511267 |
 
----
+**Senior Graduation Project – Gather**
 
-## Project Team
-
-Developed by Software Engineering students at:
-
-**Prince Sultan University (PSU)**  
-College of Computer and Information Sciences  
-Senior Project
-
-- Rama Alrashodi
-- Mashael Aljarbou
-- Reema Alnamazi
-- Dana Albassam
-- Tib Othman
-
----
-
-## Important Notes
-
-- The repository root contains the latest complete Gather application.
-- The `Sprint2/` and `Sprint3/` directories are retained as sprint snapshots.
-- Firebase Authentication and Cloud Firestore are used for authentication and application data.
-- Gemini-powered responses require a valid API key. The local `RetrievalBrain` provides a fallback.
-- Payment processing is simulated and does not perform real transactions.
-- Delivery progress is simulated within the application.
-
----
-
-**Gather – Making group food ordering easier, together.**
+Prince Sultan University  
+College of Computer and Information Sciences
