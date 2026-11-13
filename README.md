@@ -295,11 +295,8 @@ flutter pub get
 
 Set up your Firebase project and configure the required Firebase application files.
 
-### 5. Configure the Gemini API Key
 
-Create `config/secrets.json` and add your Gemini API key as described in the AI Assistant Configuration section.
-
-### 6. Run the Application
+### 5. Run the Application
 
 ```bash
 flutter run --dart-define-from-file=config/secrets.json
@@ -309,21 +306,15 @@ flutter run --dart-define-from-file=config/secrets.json
 
 ## Testing
 
-Gather was developed and evaluated through multiple testing stages, including unit testing, integration testing, and system testing.
+Gather was tested throughout its development to verify the functionality, reliability, and integration of its features.
 
-The final Sprint 3 testing report documents 60 test cases:
+Testing activities included:
 
-| Testing Type        | Number of Test Cases |
-| ------------------- | -------------------: |
-| Unit Testing        |                    3 |
-| Integration Testing |                   35 |
-| System Testing      |                   22 |
-| **Total**           |               **60** |
+- **Unit Testing:** Verifying individual functions and application components.
+- **Integration Testing:** Ensuring that different services and application features work correctly together.
+- **System Testing:** Evaluating the application's overall functionality and user experience.
 
-All 60 test cases passed according to the final Sprint 3 testing report.
-
-Testing covered application functionality, interactions between features, and overall application behavior.
-
+Testing was performed across the development sprints to identify issues, verify fixes, and ensure that implemented features behaved as expected.
 ---
 
 ## Project Structure
