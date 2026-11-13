@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
+import '../l10n/tr.dart';
 
 /// A labelled, soft-filled text field — the input style the design uses
 /// everywhere: a bold label above, a tinted rounded field below, no border
@@ -31,6 +32,7 @@ class GatherField extends StatefulWidget {
     this.initialValue,
     this.autofocus = false,
     this.textCapitalization = TextCapitalization.none,
+    this.textDirection,
   });
 
   final String label;
@@ -56,6 +58,11 @@ class GatherField extends StatefulWidget {
   final bool autofocus;
   final TextCapitalization textCapitalization;
 
+  /// For values that always read left to right, such as a phone number, so
+  /// Arabic does not move the '+' to the end. The text still lines up with
+  /// the layout's start edge.
+  final TextDirection? textDirection;
+
   @override
   State<GatherField> createState() => _GatherFieldState();
 }
@@ -67,7 +74,10 @@ class _GatherFieldState extends State<GatherField> {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(widget.label, style: AppType.label.copyWith(fontSize: 15)),
+      Text(
+        context.tr(widget.label),
+        style: AppType.label.copyWith(fontSize: 15),
+      ),
       const SizedBox(height: Insets.sm),
       TextFormField(
         controller: widget.controller,
@@ -75,7 +85,13 @@ class _GatherFieldState extends State<GatherField> {
         keyboardType: widget.keyboardType,
         textInputAction: widget.textInputAction,
         obscureText: _hidden,
-        validator: widget.validator,
+        // Validators return English; the message is shown in the app's language.
+        validator: widget.validator == null
+            ? null
+            : (v) {
+                final error = widget.validator!(v);
+                return error == null ? null : context.tr(error);
+              },
         maxLines: widget.obscure ? 1 : widget.maxLines,
         maxLength: widget.maxLength,
         inputFormatters: widget.inputFormatters,
@@ -85,11 +101,17 @@ class _GatherFieldState extends State<GatherField> {
         onFieldSubmitted: widget.onSubmitted,
         autofocus: widget.autofocus,
         textCapitalization: widget.textCapitalization,
+        textDirection: widget.textDirection,
+        textAlign: widget.textDirection == null
+            ? TextAlign.start
+            : (Directionality.of(context) == TextDirection.rtl
+                  ? TextAlign.right
+                  : TextAlign.left),
         style: AppType.bodyLarge.copyWith(fontSize: 16),
         cursorColor: AppColors.primary,
         decoration: InputDecoration(
-          hintText: widget.hint,
-          helperText: widget.helper,
+          hintText: widget.hint == null ? null : context.tr(widget.hint!),
+          helperText: widget.helper == null ? null : context.tr(widget.helper!),
           helperStyle: AppType.caption,
           counterText: '',
           prefixIcon: widget.prefixIcon == null
@@ -105,7 +127,9 @@ class _GatherFieldState extends State<GatherField> {
                     color: AppColors.inkMuted,
                   ),
                   onPressed: () => setState(() => _hidden = !_hidden),
-                  tooltip: _hidden ? 'Show password' : 'Hide password',
+                  tooltip: context.tr(
+                    _hidden ? 'Show password' : 'Hide password',
+                  ),
                 )
               : widget.suffix,
         ),
@@ -146,7 +170,7 @@ class GatherSearchField extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     height: 50,
     decoration: BoxDecoration(color: Colors.white, borderRadius: Radii.brPill),
-    padding: const EdgeInsets.only(left: Insets.lg, right: Insets.xs),
+    padding: const EdgeInsetsDirectional.only(start: Insets.lg, end: Insets.xs),
     child: Row(
       children: [
         const Icon(Icons.search_rounded, size: 21, color: AppColors.inkFaint),
@@ -165,7 +189,7 @@ class GatherSearchField extends StatelessWidget {
             decoration: InputDecoration(
               isDense: true,
               filled: false,
-              hintText: hint,
+              hintText: context.tr(hint),
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,
@@ -184,10 +208,14 @@ class GatherSearchField extends StatelessWidget {
             clipBehavior: Clip.antiAlias,
             child: InkWell(
               onTap: onTrailingTap,
-              child: SizedBox(
-                width: 40,
-                height: 40,
+              child: Semantics(
+                button: true,
+                label: context.tr('Filters'),
+                child: SizedBox(
+                width: 48,
+                height: 48,
                 child: Icon(trailingIcon, size: 19, color: AppColors.ink),
+                ),
               ),
             ),
           ),
@@ -264,32 +292,40 @@ class _CodeInputState extends State<CodeInput> {
               onTap: () => _focus.requestFocus(),
               behavior: HitTestBehavior.opaque,
               child: Row(
+                // A code reads left to right in Arabic too.
+                textDirection: TextDirection.ltr,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(widget.length, (i) {
                   final filled = i < value.length;
                   final isNext = i == value.length && _focus.hasFocus;
-                  return Container(
-                    width: 58,
-                    height: 66,
-                    margin: const EdgeInsets.symmetric(horizontal: Insets.sm),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: filled ? AppColors.primarySoft : AppColors.surface,
-                      borderRadius: Radii.brMd,
-                      border: Border.all(
-                        color: isNext
-                            ? AppColors.primary
-                            : (filled
-                                  ? AppColors.primary.withValues(alpha: 0.4)
-                                  : AppColors.line),
-                        width: isNext ? 2 : 1.4,
+                  // Flexible so four boxes still fit a narrow phone; they
+                  // keep their 58pt width wherever there is room.
+                  return Flexible(
+                    child: Container(
+                      width: 58,
+                      height: 66,
+                      margin: const EdgeInsets.symmetric(horizontal: Insets.sm),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: filled
+                            ? AppColors.primarySoft
+                            : AppColors.surface,
+                        borderRadius: Radii.brMd,
+                        border: Border.all(
+                          color: isNext
+                              ? AppColors.primary
+                              : (filled
+                                    ? AppColors.primary.withValues(alpha: 0.4)
+                                    : AppColors.line),
+                          width: isNext ? 2 : 1.4,
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      filled ? value[i] : '',
-                      style: AppType.title.copyWith(
-                        fontSize: 26,
-                        color: AppColors.primary,
+                      child: Text(
+                        filled ? value[i] : '',
+                        style: AppType.title.copyWith(
+                          fontSize: 26,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
                   );

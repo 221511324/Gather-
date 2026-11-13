@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,7 @@ import '../../app/router.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
+import '../../core/l10n/tr.dart';
 import '../../core/providers/providers.dart';
 import '../../core/services/result.dart';
 import '../../core/widgets/gather_button.dart';
@@ -87,11 +89,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 onSubmitted: (_) => _submit(),
               ),
               Align(
-                alignment: Alignment.centerRight,
+                alignment: AlignmentDirectional.centerEnd,
                 child: TextButton(
                   onPressed: () => context.push(Routes.forgotPassword),
                   child: Text(
-                    'Forgot password?',
+                    context.tr('Forgot password?'),
                     style: AppType.label.copyWith(color: AppColors.primary),
                   ),
                 ),
@@ -103,29 +105,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: Insets.xl),
               GatherButton(label: 'Log in', onPressed: _submit),
               const SizedBox(height: Insets.xxl),
-              Center(
-                child: TextButton(
-                  onPressed: () => context.push(Routes.register),
-                  child: Text.rich(
-                    TextSpan(
-                      text: "Don't have an account? ",
-                      style: AppType.body.copyWith(color: AppColors.inkMuted),
-                      children: [
-                        TextSpan(
-                          text: 'Sign up',
-                          style: AppType.label.copyWith(color: AppColors.primary),
-                        ),
-                      ],
+              // The website is for administrators, who are given an account
+              // rather than signing themselves up.
+              if (!kIsWeb)
+                Center(
+                  child: TextButton(
+                    onPressed: () => context.push(Routes.register),
+                    child: Text.rich(
+                      TextSpan(
+                        text: context.tr("Don't have an account? "),
+                        style: AppType.body.copyWith(color: AppColors.inkMuted),
+                        children: [
+                          TextSpan(
+                            text: context.tr('Sign up'),
+                            style: AppType.label.copyWith(color: AppColors.primary),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
               const SizedBox(height: Insets.sm),
               Center(
                 child: TextButton(
                   onPressed: () => context.push(Routes.onboarding),
                   child: Text(
-                    'What is Gather?',
+                    context.tr('What is Gather?'),
                     style: AppType.body.copyWith(color: AppColors.inkMuted),
                   ),
                 ),
@@ -153,7 +158,8 @@ class _ErrorBanner extends StatelessWidget {
             const SizedBox(width: Insets.sm),
             Expanded(
               child: Text(
-                message,
+                // Service errors arrive in English.
+                context.tr(message),
                 style: AppType.body.copyWith(color: AppColors.danger, fontSize: 13.5),
               ),
             ),

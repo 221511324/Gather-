@@ -6,6 +6,7 @@ import '../../app/router.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
+import '../../core/l10n/tr.dart';
 import '../../core/providers/providers.dart';
 import '../../core/services/result.dart';
 import '../../core/widgets/brand_scaffold.dart';
@@ -60,6 +61,7 @@ class _JoinSessionScreenState extends ConsumerState<JoinSessionScreen> {
         setState(() => _error = message);
       case Ok(:final value):
         ref.read(activeSessionIdProvider.notifier).state = value.id;
+        // Let the group know someone arrived.
         if (mounted) context.pushReplacement(Routes.session(value.id));
     }
   }
@@ -80,10 +82,10 @@ class _JoinSessionScreenState extends ConsumerState<JoinSessionScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Enter the 4-digit code', style: AppType.title.copyWith(fontSize: 21)),
+          Text(context.tr('Enter the 4-digit code'), style: AppType.title.copyWith(fontSize: 21)),
           const SizedBox(height: Insets.sm),
           Text(
-            'The host can find it at the top of their session.',
+            context.tr('The host can find it at the top of their session.'),
             style: AppType.body.copyWith(color: AppColors.inkMuted, fontSize: 14.5),
           ),
           const SizedBox(height: Insets.xxxl),
@@ -105,7 +107,7 @@ class _JoinSessionScreenState extends ConsumerState<JoinSessionScreen> {
                   const SizedBox(width: Insets.sm),
                   Expanded(
                     child: Text(
-                      _error!,
+                      context.tr(_error!),
                       style: AppType.body.copyWith(color: AppColors.danger, fontSize: 13.5),
                     ),
                   ),
@@ -124,8 +126,8 @@ class _JoinSessionScreenState extends ConsumerState<JoinSessionScreen> {
                   tileColor: AppColors.surface,
                   shape: RoundedRectangleBorder(borderRadius: Radii.brMd),
                   leading: MemberAvatarStack(members: session.members, size: 30, max: 2),
-                  title: Text(session.name, style: AppType.bodyStrong),
-                  subtitle: Text('From ${session.hostName}', style: AppType.caption),
+                  title: Text(context.isolate(session.name), style: AppType.bodyStrong),
+                  subtitle: Text(context.tr('From {name}', {'name': context.isolate(session.hostName)}), style: AppType.caption),
                   trailing: const Icon(Icons.chevron_right_rounded),
                 ),
               ),

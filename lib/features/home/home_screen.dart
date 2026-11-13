@@ -6,6 +6,7 @@ import '../../app/router.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
+import '../../core/l10n/tr.dart';
 import '../../core/models/models.dart';
 import '../../core/providers/providers.dart';
 import '../../core/widgets/brand_scaffold.dart';
@@ -15,6 +16,8 @@ import '../../core/widgets/gather_field.dart';
 import '../../core/widgets/member_avatar.dart';
 import '../../core/widgets/state_views.dart';
 import '../restaurant/item_sheet.dart';
+import '../stories/story_rail.dart';
+import '../rewards/spin_win_banner.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -47,6 +50,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ? ''
         : (user.fullName.isEmpty ? user.username : user.fullName.split(' ').first);
 
+    final cartCount = ref.watch(cartCountProvider);
     final restaurants = ref.watch(restaurantsProvider);
     final live = ref.watch(liveSessionsProvider);
     final invites = ref.watch(myInvitesProvider).valueOrNull ?? const [];
@@ -57,12 +61,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            firstName.isEmpty ? _greeting : '$_greeting, $firstName',
+            firstName.isEmpty
+                ? context.tr(_greeting)
+                : context.tr('{greeting}, {name}', {'greeting': context.tr(_greeting), 'name': context.isolate(firstName)}),
             style: AppType.display.copyWith(color: Colors.white, fontSize: 27),
           ),
           const SizedBox(height: 2),
           Text(
-            _greetingSub,
+            context.tr(_greetingSub),
             style: AppType.body.copyWith(color: Colors.white.withValues(alpha: 0.9), fontSize: 14),
           ),
         ],
@@ -70,9 +76,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       leading: const SizedBox.shrink(),
       actions: [
         BandIconButton(
-          icon: Icons.dialpad_rounded,
-          onTap: () => context.push(Routes.joinSession),
-          tooltip: 'Join with a code',
+          icon: Icons.shopping_bag_outlined,
+          onTap: () => context.push(Routes.cart),
+          tooltip: 'Cart',
+          badgeCount: cartCount,
         ),
       ],
       bandContent: GatherSearchField(
@@ -86,11 +93,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         onRefresh: () async {
           ref.invalidate(restaurantsProvider);
           ref.invalidate(allMenuItemsProvider);
+          ref.invalidate(storyFeedProvider);
           await Future<void>.delayed(const Duration(milliseconds: 400));
         },
         child: ListView(
           padding: const EdgeInsets.only(top: Insets.xxl, bottom: 140),
           children: [
+            // Food stories first, where people expect them (US19).
+            const StoryRail(),
+            const SizedBox(height: Insets.lg),
+            // The daily free spin (FR25), where it will be seen every day.
+            const SpinWinBanner(
+              margin: EdgeInsetsDirectional.fromSTEB(Insets.gutter, 0, Insets.gutter, Insets.lg),
+            ),
             if (invites.isNotEmpty) ...[
               _InviteBanner(session: invites.first),
               const SizedBox(height: Insets.lg),
@@ -177,10 +192,11 @@ class _InviteBanner extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('${session.hostName} invited you', style: AppType.bodyStrong),
+                    Text(context.tr('{name} invited you', {'name': context.isolate(session.hostName)}),
+                        style: AppType.bodyStrong),
                     const SizedBox(height: 2),
                     Text(
-                      'Join "${session.name}" and add your order',
+                      context.tr('Join "{session}" and add your order', {'session': context.isolate(session.name)}),
                       style: AppType.caption.copyWith(color: AppColors.accentDeep),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -203,6 +219,8 @@ class _LiveSessionCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lines = ref.watch(sessionLinesProvider(session.id)).valueOrNull ?? const [];
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: Insets.gutter),
       child: GatherCard(
@@ -225,7 +243,7 @@ class _LiveSessionCard extends ConsumerWidget {
                   const SizedBox(width: Insets.sm),
                   Expanded(
                     child: Text(
-                      session.name,
+                      context.isolate(session.name),
                       style: AppType.bodyStrong.copyWith(color: Colors.white, fontSize: 16),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -252,14 +270,19 @@ class _LiveSessionCard extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          session.restaurantName ?? 'Choosing a restaurant',
+                          session.restaurantName == null
+                              ? context.tr('Choosing a restaurant')
+                              : context.isolate(session.restaurantName!),
                           style: AppType.bodyStrong,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
-                          '${session.memberCount} '
-                          '${session.memberCount == 1 ? 'member' : 'members'} · tap to open',
+                          context.tr(
+                              lines.length == 1
+                                  ? '{members} members · {count} item in the shared cart'
+                                  : '{members} members · {count} items in the shared cart',
+                              {'members': session.memberCount, 'count': lines.length}),
                           style: AppType.caption,
                         ),
                       ],
@@ -302,10 +325,10 @@ class _GroupCallToAction extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('Eating with people?', style: AppType.headline),
+                      Text(context.tr('Eating with people?'), style: AppType.headline),
                       const SizedBox(height: 2),
                       Text(
-                        'Everyone picks their own food into one cart.',
+                        context.tr('Everyone picks their own food into one cart.'),
                         style: AppType.caption,
                       ),
                     ],
@@ -321,7 +344,9 @@ class _GroupCallToAction extends StatelessWidget {
                     label: 'Start a group',
                     icon: Icons.add_rounded,
                     compact: true,
-                    onPressed: () => context.go(Routes.group),
+                    onPressed: () {
+                      context.go(Routes.group);
+                    },
                   ),
                 ),
                 const SizedBox(width: Insets.md),
@@ -469,7 +494,7 @@ class _CategoryResults extends ConsumerWidget {
     if (items.isEmpty) {
       return EmptyView(
         icon: CategoryChip.iconFor(category),
-        title: 'Nothing in ${category.label} yet',
+        title: context.tr('Nothing in {category} yet', {'category': context.tr(category.label)}),
         message: 'Try another category.',
       );
     }

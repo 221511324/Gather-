@@ -5,11 +5,13 @@ import 'package:go_router/go_router.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
+import '../../core/l10n/tr.dart';
 import '../../core/providers/providers.dart';
 
-/// Holds the four top-level destinations and the floating navigation bar.
+/// Holds the five top-level destinations and the floating navigation bar.
 ///
-/// Orders joins the bar in Phase 2, once there is an order to show.
+/// "Group" sits in the middle and is raised, because opening a shared session
+/// is the thing this app exists to do — it should never be two taps away.
 class MainShell extends ConsumerWidget {
   const MainShell({super.key, required this.navigationShell});
 
@@ -19,8 +21,20 @@ class MainShell extends ConsumerWidget {
     _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: 'Home'),
     _NavItem(icon: Icons.search_rounded, activeIcon: Icons.search_rounded, label: 'Search'),
     _NavItem(icon: Icons.groups_outlined, activeIcon: Icons.groups_rounded, label: 'Group'),
+    _NavItem(
+      icon: Icons.receipt_long_outlined,
+      activeIcon: Icons.receipt_long_rounded,
+      label: 'Orders',
+    ),
     _NavItem(icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded, label: 'Profile'),
   ];
+
+  /// How far above the bottom edge the top of the floating bar sits, so
+  /// anything floating over the tabs (the assistant bubble) can clear it.
+  static double barClearance(MediaQueryData media) {
+    final bottomInset = media.padding.bottom;
+    return _navBarHeight + (bottomInset > 0 ? bottomInset * 0.5 + 6 : Insets.md);
+  }
 
   void _go(int index) => navigationShell.goBranch(
         index,
@@ -29,6 +43,7 @@ class MainShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final activeOrders = ref.watch(activeOrdersProvider).length;
     final liveSessions = ref.watch(liveSessionsProvider).length;
     final invites = ref.watch(myInvitesProvider).valueOrNull?.length ?? 0;
 
@@ -47,7 +62,7 @@ class MainShell extends ConsumerWidget {
         currentIndex: navigationShell.currentIndex,
         onTap: _go,
         items: _items,
-        badges: {2: liveSessions + invites},
+        badges: {2: liveSessions + invites, 3: activeOrders},
       ),
     );
   }
@@ -60,9 +75,8 @@ class _BottomFade extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).padding.bottom;
     // The bar itself, plus enough room above it for the fade to do its work.
-    final height = _navBarHeight + (bottomInset > 0 ? bottomInset * 0.5 + 6 : Insets.md) + 64;
+    final height = MainShell.barClearance(MediaQuery.of(context)) + 64;
 
     return IgnorePointer(
       child: SizedBox(
@@ -158,7 +172,7 @@ class _NavButton extends StatelessWidget {
   Widget build(BuildContext context) => Semantics(
         selected: selected,
         button: true,
-        label: item.label,
+        label: context.tr(item.label),
         child: InkWell(
           onTap: onTap,
           borderRadius: Radii.brPill,
@@ -182,8 +196,8 @@ class _NavButton extends StatelessWidget {
                     ),
                   ),
                   if (badge > 0)
-                    Positioned(
-                      right: 2,
+                    PositionedDirectional(
+                      end: 2,
                       top: -2,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
@@ -209,7 +223,7 @@ class _NavButton extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                item.label,
+                context.tr(item.label),
                 style: AppType.overline.copyWith(
                   color: Colors.white.withValues(alpha: selected ? 1 : 0.72),
                   fontSize: 9.5,

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/app_user.dart';
 import 'firestore_refs.dart';
@@ -49,6 +50,14 @@ class AuthService {
 
   // ------------------------------------------------------------ sign up/in --
 
+  /// Automated tests sign up with addresses that cannot receive mail. The
+  /// database rules let this domain skip verification, so a release build
+  /// refuses it at sign-up.
+  static const testEmailDomain = '@gather-test.local';
+
+  static bool isTestEmail(String email) =>
+      email.trim().toLowerCase().endsWith(testEmailDomain);
+
   Future<Result<AppUser>> signUp({
     required String fullName,
     required String username,
@@ -56,6 +65,10 @@ class AuthService {
     required String phone,
     required String password,
   }) async {
+    if (isTestEmail(email) && !kDebugMode) {
+      return const Err('That email address is not valid');
+    }
+
     final handle = username.trim().toLowerCase();
     final indexRef = refs.username(handle);
 
@@ -83,6 +96,7 @@ class AuthService {
       email: email.trim(),
       phone: phone.trim(),
       createdAt: DateTime.now(),
+      mustVerifyEmail: !isTestEmail(email),
     );
 
     try {
@@ -107,6 +121,8 @@ class AuthService {
     }
 
     await credential.user?.updateDisplayName(profile.fullName);
+    // A failure here does not undo the account: the next screen has a Resend.
+    if (profile.mustVerifyEmail) await sendVerificationEmail();
     return Ok(profile);
   }
 
@@ -140,6 +156,40 @@ class AuthService {
     }
   }
 
+  /// Emails the signed-in person their verification link (FR1). Firebase sends
+  /// it, which is free and needs no server of our own.
+  Future<Result<void>> sendVerificationEmail({String? languageCode}) async {
+    final user = auth.currentUser;
+    if (user == null) return const Err('Please sign in again to continue');
+    try {
+      if (languageCode != null) await auth.setLanguageCode(languageCode);
+      await user.sendEmailVerification();
+      return const Ok(null);
+    } on FirebaseAuthException catch (e) {
+      return Err(_authMessage(e));
+    }
+  }
+
+  /// Asks Firebase whether the link has been opened. When it has, refreshes the
+  /// sign-in token, because the database rules read the verified state from it,
+  /// and then clears [AppUser.mustVerifyEmail], which lets the person in.
+  Future<Result<bool>> confirmEmailVerified() async {
+    final user = auth.currentUser;
+    if (user == null) return const Err('Please sign in again to continue');
+    try {
+      await user.reload();
+      final fresh = auth.currentUser;
+      if (fresh == null || !fresh.emailVerified) return const Ok(false);
+      await fresh.getIdToken(true);
+      await refs.user(fresh.uid).update({'mustVerifyEmail': false});
+      return const Ok(true);
+    } on FirebaseAuthException catch (e) {
+      return Err(_authMessage(e));
+    } on FirebaseException catch (e) {
+      return Err(e.message ?? 'Could not confirm your email. Try again.');
+    }
+  }
+
   Future<void> signOut() => auth.signOut();
 
   // -------------------------------------------------------------- profile ---
@@ -160,6 +210,28 @@ class AuthService {
       return const Ok(null);
     } on FirebaseException catch (e) {
       return Err(e.message ?? 'Could not save your profile');
+    }
+  }
+
+  /// US17 — the preferences on the settings screen.
+  ///
+  /// Written as one map rather than field by field, so a half-saved set of
+  /// settings cannot exist.
+  Future<Result<void>> saveSettings(String uid, UserSettings settings) async {
+    try {
+      await refs.user(uid).update({'settings': settings.toMap()});
+      return const Ok(null);
+    } on FirebaseException catch (e) {
+      return Err(e.message ?? 'Could not save your settings');
+    }
+  }
+
+  Future<Result<void>> saveAddresses(String uid, List<Address> addresses) async {
+    try {
+      await refs.user(uid).update({'addresses': addresses.map((a) => a.toMap()).toList()});
+      return const Ok(null);
+    } on FirebaseException catch (e) {
+      return Err(e.message ?? 'Could not save your addresses');
     }
   }
 

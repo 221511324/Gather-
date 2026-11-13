@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
+import '../../core/l10n/tr.dart';
 import '../../core/providers/providers.dart';
 import '../../core/services/result.dart';
 import '../../core/widgets/gather_button.dart';
@@ -64,8 +65,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           ),
           const SizedBox(height: Insets.xl),
           Text(
-            'We sent a reset link to ${_email.text.trim()}. Open it to choose a new password, '
-            'then come back and log in.',
+            context.tr(
+                'We sent a reset link to {email}. Open it to choose a new password, '
+                'then come back and log in.',
+                {'email': _email.text.trim()}),
             style: AppType.bodyLarge.copyWith(color: AppColors.inkMuted, height: 1.5),
           ),
           const SizedBox(height: Insets.xxl),
@@ -74,7 +77,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           Center(
             child: TextButton(
               onPressed: () => setState(() => _sent = false),
-              child: const Text('Use a different email'),
+              child: Text(context.tr('Use a different email')),
             ),
           ),
         ],
@@ -86,7 +89,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Enter the email on your account and we will send you a link to set a new password.',
+              context.tr('Enter the email on your account and we will send you a link to set a new password.'),
               style: AppType.bodyLarge.copyWith(color: AppColors.inkMuted, height: 1.5),
             ),
             const SizedBox(height: Insets.xxl),

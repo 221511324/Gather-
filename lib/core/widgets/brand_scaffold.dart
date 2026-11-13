@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
+import '../l10n/tr.dart';
 
 /// The page shell the whole app is built on.
 ///
@@ -173,11 +174,11 @@ class _Band extends StatelessWidget {
                     child: title == null
                         ? const SizedBox.shrink()
                         : Text(
-                            title!,
+                            context.tr(title!),
                             style: AppType.headline.copyWith(color: Colors.white, fontSize: 19),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            textAlign: showBack || leading != null ? TextAlign.left : TextAlign.left,
+                            textAlign: TextAlign.start,
                           ),
                   ),
                   if (actions != null) ...[
@@ -194,7 +195,7 @@ class _Band extends StatelessWidget {
           if (subtitle != null) ...[
             const SizedBox(height: Insets.xs),
             Text(
-              subtitle!,
+              context.tr(subtitle!),
               style: AppType.body.copyWith(color: Colors.white.withValues(alpha: 0.92), fontSize: 14),
             ),
           ],
@@ -244,7 +245,8 @@ class BandIconButton extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        child: SizedBox(width: 42, height: 42, child: Icon(icon, size: 19, color: Colors.white)),
+        // 48 is the smallest tap target the accessibility guidelines allow (NFR12).
+        child: SizedBox(width: 48, height: 48, child: Icon(icon, size: 20, color: Colors.white)),
       ),
     );
 
@@ -254,8 +256,8 @@ class BandIconButton extends StatelessWidget {
             clipBehavior: Clip.none,
             children: [
               button,
-              Positioned(
-                right: -2,
+              PositionedDirectional(
+                end: -2,
                 top: -2,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
@@ -275,7 +277,7 @@ class BandIconButton extends StatelessWidget {
             ],
           );
 
-    return tooltip == null ? wrapped : Tooltip(message: tooltip!, child: wrapped);
+    return tooltip == null ? wrapped : Tooltip(message: context.tr(tooltip!), child: wrapped);
   }
 }
 
@@ -308,12 +310,12 @@ class PlainScaffold extends StatelessWidget {
           backgroundColor: backgroundColor ?? AppColors.background,
           appBar: AppBar(
             automaticallyImplyLeading: false,
-            title: title == null ? null : Text(title!),
+            title: title == null ? null : Text(context.tr(title!)),
             leading: showBack
                 ? IconButton(
                     icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 19),
                     onPressed: () => Navigator.of(context).maybePop(),
-                    tooltip: 'Back',
+                    tooltip: context.tr('Back'),
                   )
                 : null,
             actions: actions,

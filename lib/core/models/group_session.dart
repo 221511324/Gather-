@@ -34,6 +34,23 @@ extension PaymentModeX on PaymentMode {
 
 /// Lifecycle of a group session. The host drives it forward; members see the
 /// stage change in real time.
+/// How the group settles on a restaurant. The host picks this once, at the
+/// start, and it decides what everyone else is offered.
+enum RestaurantDecisionMode {
+  /// Members each put one restaurant forward and the wheel decides.
+  spin,
+
+  /// The host chooses, and members are not asked to suggest.
+  hostChoice,
+}
+
+extension RestaurantDecisionModeX on RestaurantDecisionMode {
+  String get label => switch (this) {
+        RestaurantDecisionMode.spin => 'Spin the wheel',
+        RestaurantDecisionMode.hostChoice => 'Host chooses',
+      };
+}
+
 enum SessionStage {
   /// Members are still joining.
   lobby,
@@ -208,6 +225,13 @@ class RestaurantSuggestion {
 }
 
 class GroupSession {
+  /// The most people one session can hold, host included.
+  ///
+  /// A shared cart is read in full by everyone in the session, so the document
+  /// grows with the group; a ceiling keeps that readable and keeps a session
+  /// something a group can actually coordinate.
+  static const maxMembers = 20;
+
   const GroupSession({
     required this.id,
     required this.code,
@@ -222,11 +246,14 @@ class GroupSession {
     this.restaurantName,
     this.restaurantImageUrl,
     this.decidedBySpin = false,
+    this.decisionMode,
     this.paymentMode,
     this.deliveryAddress,
     this.orderId,
     this.voucherCode,
     this.voucherDiscount = 0,
+    this.voucherHeldId,
+    this.voucherHolderUid,
     this.createdAt,
     this.updatedAt,
   });
@@ -251,6 +278,9 @@ class GroupSession {
 
   /// True when Restaurant Spin picked the restaurant rather than the host.
   final bool decidedBySpin;
+
+  /// Null until the host decides how the restaurant will be chosen.
+  final RestaurantDecisionMode? decisionMode;
   final PaymentMode? paymentMode;
   final String? deliveryAddress;
 
@@ -261,6 +291,11 @@ class GroupSession {
   /// The discount the host's voucher yields, resolved once when it is applied
   /// so the whole group sees the same total.
   final double voucherDiscount;
+
+  /// Which held reward (its id under the holder's vouchers) the discount came
+  /// from, and whose it is, so it can be marked used when the order is placed.
+  final String? voucherHeldId;
+  final String? voucherHolderUid;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -274,6 +309,24 @@ class GroupSession {
   SessionMember? memberOf(String uid) {
     for (final m in members) {
       if (m.uid == uid) return m;
+    }
+    return null;
+  }
+
+  /// Whether anyone else can still join.
+  bool get isFull => members.length >= maxMembers;
+
+  /// How many places are left, never below zero.
+  int get placesLeft {
+    final left = maxMembers - members.length;
+    return left < 0 ? 0 : left;
+  }
+
+  /// The one suggestion this member put forward, if any. Each member gets a
+  /// single pick, so this is a lookup rather than a list.
+  RestaurantSuggestion? suggestionBy(String uid) {
+    for (final s in suggestions) {
+      if (s.suggestedBy == uid) return s;
     }
     return null;
   }
@@ -300,6 +353,10 @@ class GroupSession {
         restaurantName: Parse.strOrNull(m['restaurantName']),
         restaurantImageUrl: Parse.strOrNull(m['restaurantImageUrl']),
         decidedBySpin: Parse.boolean(m['decidedBySpin']),
+        decisionMode: m['decisionMode'] == null
+            ? null
+            : Parse.enumOf(RestaurantDecisionMode.values, m['decisionMode'],
+                RestaurantDecisionMode.spin),
         paymentMode: m['paymentMode'] == null
             ? null
             : Parse.enumOf(PaymentMode.values, m['paymentMode'], PaymentMode.individual),
@@ -307,6 +364,8 @@ class GroupSession {
         orderId: Parse.strOrNull(m['orderId']),
         voucherCode: Parse.strOrNull(m['voucherCode']),
         voucherDiscount: Parse.number(m['voucherDiscount']),
+        voucherHeldId: Parse.strOrNull(m['voucherHeldId']),
+        voucherHolderUid: Parse.strOrNull(m['voucherHolderUid']),
         createdAt: Parse.dateOrNull(m['createdAt']),
         updatedAt: Parse.dateOrNull(m['updatedAt']),
       );
@@ -324,11 +383,14 @@ class GroupSession {
         'restaurantName': restaurantName,
         'restaurantImageUrl': restaurantImageUrl,
         'decidedBySpin': decidedBySpin,
+        'decisionMode': decisionMode?.name,
         'paymentMode': paymentMode?.name,
         'deliveryAddress': deliveryAddress,
         'orderId': orderId,
         'voucherCode': voucherCode,
         'voucherDiscount': voucherDiscount,
+        'voucherHeldId': voucherHeldId,
+        'voucherHolderUid': voucherHolderUid,
         'createdAt': createdAt,
         'updatedAt': updatedAt,
       };

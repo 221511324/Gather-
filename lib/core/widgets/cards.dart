@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
+import '../l10n/tr.dart';
 import '../models/restaurant.dart';
 import '../utils/money.dart';
 import 'food_image.dart';
@@ -63,9 +64,9 @@ class PriceBadge extends StatelessWidget {
         ),
         decoration: const BoxDecoration(
           color: AppColors.accent,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(Radii.md),
-            bottomRight: Radius.circular(Radii.lg),
+          borderRadius: BorderRadiusDirectional.only(
+            topStart: Radius.circular(Radii.md),
+            bottomEnd: Radius.circular(Radii.lg),
           ),
         ),
         child: Text(
@@ -112,9 +113,9 @@ class FoodTile extends StatelessWidget {
                     child: FoodImage(url: item.imageUrl, width: double.infinity),
                   ),
                   if (showRating)
-                    Positioned(
+                    PositionedDirectional(
                       top: Insets.sm,
-                      left: Insets.sm,
+                      start: Insets.sm,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: Insets.sm, vertical: 3),
                         decoration: BoxDecoration(
@@ -139,9 +140,9 @@ class FoodTile extends StatelessWidget {
                       ),
                     ),
                   if (onFavorite != null)
-                    Positioned(
+                    PositionedDirectional(
                       top: Insets.xs,
-                      right: Insets.xs,
+                      end: Insets.xs,
                       child: IconButton(
                         onPressed: onFavorite,
                         iconSize: 19,
@@ -155,10 +156,10 @@ class FoodTile extends StatelessWidget {
                           isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
                           color: isFavorite ? AppColors.coral : AppColors.inkMuted,
                         ),
-                        tooltip: isFavorite ? 'Remove from favourites' : 'Add to favourites',
+                        tooltip: context.tr(isFavorite ? 'Remove from favourites' : 'Add to favourites'),
                       ),
                     ),
-                  Positioned(bottom: 0, right: 0, child: PriceBadge(price: item.price)),
+                  PositionedDirectional(bottom: 0, end: 0, child: PriceBadge(price: item.price)),
                 ],
               ),
               Padding(
@@ -168,14 +169,14 @@ class FoodTile extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      item.name,
+                      context.isolate(item.name),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppType.bodyStrong,
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      item.description,
+                      context.isolate(item.description),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: AppType.caption.copyWith(height: 1.3),
@@ -225,7 +226,7 @@ class FoodRow extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          item.name,
+                          context.isolate(item.name),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppType.bodyStrong.copyWith(fontSize: 15.5),
@@ -239,7 +240,7 @@ class FoodRow extends StatelessWidget {
                             borderRadius: Radii.brSm,
                           ),
                           child: Text(
-                            'POPULAR',
+                            context.tr('POPULAR'),
                             style: AppType.overline.copyWith(
                               color: AppColors.accentDeep,
                               fontSize: 9.5,
@@ -251,19 +252,19 @@ class FoodRow extends StatelessWidget {
                           onPressed: onFavorite,
                           iconSize: 19,
                           visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.only(left: Insets.sm),
+                          padding: const EdgeInsetsDirectional.only(start: Insets.sm),
                           constraints: const BoxConstraints(),
                           icon: Icon(
                             isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
                             color: isFavorite ? AppColors.coral : AppColors.inkFaint,
                           ),
-                          tooltip: isFavorite ? 'Remove from favourites' : 'Add to favourites',
+                          tooltip: context.tr(isFavorite ? 'Remove from favourites' : 'Add to favourites'),
                         ),
                     ],
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    item.description,
+                    context.isolate(item.description),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: AppType.caption.copyWith(height: 1.35),
@@ -277,7 +278,7 @@ class FoodRow extends StatelessWidget {
                       ),
                       if (item.calories != null) ...[
                         const SizedBox(width: Insets.sm),
-                        Text('· ${item.calories} kcal', style: AppType.caption),
+                        Text(context.tr('· {calories} kcal', {'calories': item.calories}), style: AppType.caption),
                       ],
                       const Spacer(),
                       ?trailing,
@@ -328,16 +329,16 @@ class RestaurantCard extends StatelessWidget {
                       color: AppColors.ink.withValues(alpha: 0.55),
                       child: Center(
                         child: Text(
-                          'Closed',
+                          context.tr('Closed'),
                           style: AppType.headline.copyWith(color: Colors.white),
                         ),
                       ),
                     ),
                   ),
                 if (onFavorite != null)
-                  Positioned(
+                  PositionedDirectional(
                     top: Insets.sm,
-                    right: Insets.sm,
+                    end: Insets.sm,
                     child: IconButton(
                       onPressed: onFavorite,
                       iconSize: 20,
@@ -349,7 +350,7 @@ class RestaurantCard extends StatelessWidget {
                         isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
                         color: isFavorite ? AppColors.coral : AppColors.inkMuted,
                       ),
-                      tooltip: isFavorite ? 'Remove from favourites' : 'Add to favourites',
+                      tooltip: context.tr(isFavorite ? 'Remove from favourites' : 'Add to favourites'),
                     ),
                   ),
               ],
@@ -364,7 +365,7 @@ class RestaurantCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          restaurant.name,
+                          context.isolate(restaurant.name),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppType.headline,
@@ -377,7 +378,7 @@ class RestaurantCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    restaurant.cuisine,
+                    context.isolate(restaurant.cuisine),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppType.caption,
@@ -387,13 +388,19 @@ class RestaurantCard extends StatelessWidget {
                     children: [
                       const Icon(Icons.schedule_rounded, size: 15, color: AppColors.inkMuted),
                       const SizedBox(width: 4),
-                      Text(restaurant.deliveryLabel, style: AppType.caption),
+                      Text(
+                        context.tr('{min}–{max} min', {
+                          'min': restaurant.deliveryMinutes,
+                          'max': restaurant.deliveryMinutes + 10,
+                        }),
+                        style: AppType.caption,
+                      ),
                       const SizedBox(width: Insets.md),
                       const Icon(Icons.delivery_dining_rounded, size: 16, color: AppColors.inkMuted),
                       const SizedBox(width: 4),
                       Text(
                         restaurant.deliveryFee == 0
-                            ? 'Free'
+                            ? context.tr('Free')
                             : Money.format(restaurant.deliveryFee),
                         style: AppType.caption,
                       ),
@@ -454,7 +461,7 @@ class CategoryChip extends StatelessWidget {
             ),
             const SizedBox(height: Insets.sm),
             Text(
-              category.label,
+              context.tr(category.label),
               style: AppType.caption.copyWith(
                 color: selected ? AppColors.primary : AppColors.inkMuted,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w400,

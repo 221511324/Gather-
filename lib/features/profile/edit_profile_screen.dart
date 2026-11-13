@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
+import '../../core/l10n/tr.dart';
 import '../../core/providers/providers.dart';
 import '../../core/services/result.dart';
 import '../../core/widgets/brand_scaffold.dart';
@@ -96,6 +97,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               controller: _phone,
               prefixIcon: Icons.phone_outlined,
               keyboardType: TextInputType.phone,
+              textDirection: TextDirection.ltr,
               helper: 'Friends can add you to a session with this',
               validator: Validate.phone,
             ),
@@ -142,7 +144,7 @@ class _ReadOnlyField extends StatelessWidget {
   Widget build(BuildContext context) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: AppType.label.copyWith(fontSize: 15)),
+          Text(context.tr(label), style: AppType.label.copyWith(fontSize: 15)),
           const SizedBox(height: Insets.sm),
           GatherCard(
             shadows: const [],
@@ -153,8 +155,14 @@ class _ReadOnlyField extends StatelessWidget {
                 Icon(icon, size: 20, color: AppColors.inkFaint),
                 const SizedBox(width: Insets.md),
                 Expanded(
+                  // The values are a handle and an email, which read left to
+                  // right in Arabic too; they still line up with the label.
                   child: Text(
                     value,
+                    textDirection: TextDirection.ltr,
+                    textAlign: Directionality.of(context) == TextDirection.rtl
+                        ? TextAlign.right
+                        : TextAlign.left,
                     style: AppType.bodyLarge.copyWith(fontSize: 15, color: AppColors.inkMuted),
                   ),
                 ),
@@ -164,7 +172,7 @@ class _ReadOnlyField extends StatelessWidget {
           ),
           if (note != null) ...[
             const SizedBox(height: Insets.xs),
-            Text(note!, style: AppType.caption.copyWith(fontSize: 11.5)),
+            Text(context.tr(note!), style: AppType.caption.copyWith(fontSize: 11.5)),
           ],
         ],
       );

@@ -6,9 +6,11 @@ import '../../app/router.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
+import '../../core/l10n/tr.dart';
 import '../../core/providers/providers.dart';
 import '../../core/widgets/brand_scaffold.dart';
 import '../../core/widgets/cards.dart';
+import '../../core/widgets/directional_icons.dart';
 import '../../core/widgets/member_avatar.dart';
 import '../../core/widgets/state_views.dart';
 
@@ -19,8 +21,10 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider).valueOrNull;
-    final sessions = ref.watch(mySessionsProvider).valueOrNull ?? const [];
-    final live = ref.watch(liveSessionsProvider);
+    final orders = ref.watch(myOrdersProvider).valueOrNull ?? const [];
+    final saved = ref.watch(savedSessionsProvider).valueOrNull ?? const [];
+    final isAdmin = ref.watch(isAdminProvider);
+    final unread = ref.watch(unreadNotificationsProvider);
 
     if (user == null) {
       return const BrandScaffold(title: 'Profile', child: LoadingView());
@@ -46,13 +50,15 @@ class ProfileScreen extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  user.fullName.isEmpty ? user.username : user.fullName,
+                  context.isolate(user.fullName.isEmpty ? user.username : user.fullName),
                   style: AppType.headline.copyWith(color: Colors.white, fontSize: 19),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   '@${user.username}',
+                  // A handle reads left to right in Arabic too, '@' first.
+                  textDirection: TextDirection.ltr,
                   style: AppType.body.copyWith(
                     color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 13.5,
@@ -64,7 +70,7 @@ class ProfileScreen extends ConsumerWidget {
           IconButton(
             onPressed: () => context.push(Routes.editProfile),
             icon: const Icon(Icons.edit_outlined, color: Colors.white, size: 20),
-            tooltip: 'Edit profile',
+            tooltip: context.tr('Edit profile'),
             style: IconButton.styleFrom(
               backgroundColor: Colors.white.withValues(alpha: 0.2),
             ),
@@ -76,17 +82,12 @@ class ProfileScreen extends ConsumerWidget {
         children: [
           Row(
             children: [
-              _Stat(
-                label: 'Groups',
-                value: '${sessions.length}',
-                icon: Icons.groups_rounded,
-                onTap: () => context.go(Routes.group),
-              ),
+              _Stat(label: 'Orders', value: '${orders.length}', icon: Icons.receipt_long_rounded),
               const SizedBox(width: Insets.md),
               _Stat(
-                label: 'Live now',
-                value: '${live.length}',
-                icon: Icons.bolt_rounded,
+                label: 'Groups',
+                value: '${saved.length}',
+                icon: Icons.groups_rounded,
                 onTap: () => context.go(Routes.group),
               ),
             ],
@@ -101,18 +102,84 @@ class ProfileScreen extends ConsumerWidget {
                 onTap: () => context.push(Routes.editProfile),
               ),
               _Row(
-                icon: Icons.groups_outlined,
-                label: 'My groups',
-                trailing: '${sessions.length}',
-                onTap: () => context.go(Routes.group),
+                icon: Icons.location_on_outlined,
+                label: 'Delivery addresses',
+                trailing: '${user.addresses.length}',
+                onTap: () => context.push(Routes.addresses),
               ),
+              _Row(
+                icon: Icons.credit_card_rounded,
+                label: 'Payment methods',
+                onTap: () => context.push(Routes.paymentMethods),
+              ),
+              _Row(
+                icon: Icons.favorite_border_rounded,
+                label: 'Favourites',
+                trailing: '${user.favoriteRestaurantIds.length + user.favoriteItemIds.length}',
+                onTap: () => context.push(Routes.favorites),
+              ),
+            ],
+          ),
+          const SizedBox(height: Insets.xxl),
+          const SectionHeader(title: 'Activity'),
+          _Group(
+            children: [
+              _Row(
+                icon: Icons.receipt_long_outlined,
+                label: 'My orders',
+                onTap: () => context.go(Routes.orders),
+              ),
+            ],
+          ),
+          const SizedBox(height: Insets.xxl),
+          const SectionHeader(title: 'App'),
+          _Group(
+            children: [
+              _Row(
+                icon: Icons.auto_awesome_rounded,
+                label: 'Food assistant',
+                onTap: () => context.push(Routes.assistant),
+              ),
+              _Row(
+                icon: Icons.photo_camera_outlined,
+                label: 'Food stories',
+                onTap: () => context.push(Routes.stories),
+              ),
+              _Row(
+                icon: Icons.card_giftcard_outlined,
+                label: 'Rewards',
+                onTap: () => context.push(Routes.rewards),
+              ),
+              _Row(
+                icon: Icons.notifications_none_rounded,
+                label: 'Notifications',
+                trailing: unread > 0 ? context.tr('{count} new', {'count': unread}) : null,
+                onTap: () => context.push(Routes.notifications),
+              ),
+              _Row(
+                icon: Icons.settings_outlined,
+                label: 'Settings',
+                onTap: () => context.push(Routes.settings),
+              ),
+              _Row(
+                icon: Icons.help_outline_rounded,
+                label: 'Help & support',
+                onTap: () => context.push(Routes.help),
+              ),
+              if (isAdmin)
+                _Row(
+                  icon: Icons.admin_panel_settings_outlined,
+                  label: 'Admin dashboard',
+                  color: AppColors.accentDeep,
+                  onTap: () => context.push(Routes.admin),
+                ),
             ],
           ),
           const SizedBox(height: Insets.xxl),
           _Group(
             children: [
               _Row(
-                icon: Icons.logout_rounded,
+                icon: DirectionalIcons.logout,
                 label: 'Log out',
                 color: AppColors.danger,
                 showChevron: false,
@@ -120,17 +187,17 @@ class ProfileScreen extends ConsumerWidget {
                   final confirm = await showDialog<bool>(
                     context: context,
                     builder: (context) => AlertDialog(
-                      title: const Text('Log out?'),
-                      content: const Text('You will need to sign in again to order.'),
+                      title: Text(context.tr('Log out?')),
+                      content: Text(context.tr('You will need to sign in again to order.')),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Stay'),
+                          child: Text(context.tr('Stay')),
                         ),
                         FilledButton(
                           style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
                           onPressed: () => Navigator.pop(context, true),
-                          child: const Text('Log out'),
+                          child: Text(context.tr('Log out')),
                         ),
                       ],
                     ),
@@ -145,7 +212,7 @@ class ProfileScreen extends ConsumerWidget {
           const SizedBox(height: Insets.xl),
           Center(
             child: Text(
-              'Gather · Senior Project · Prince Sultan University',
+              context.tr('Gather · Senior Project · Prince Sultan University'),
               style: AppType.overline.copyWith(fontSize: 10),
             ),
           ),
@@ -173,7 +240,7 @@ class _Stat extends StatelessWidget {
               Icon(icon, size: 21, color: AppColors.primary),
               const SizedBox(height: Insets.sm),
               Text(value, style: AppType.title.copyWith(fontSize: 20)),
-              Text(label, style: AppType.overline.copyWith(fontSize: 10)),
+              Text(context.tr(label), style: AppType.overline.copyWith(fontSize: 10)),
             ],
           ),
         ),
@@ -195,7 +262,7 @@ class _Group extends StatelessWidget {
               children[i],
               if (i != children.length - 1)
                 const Padding(
-                  padding: EdgeInsets.only(left: 56),
+                  padding: EdgeInsetsDirectional.only(start: 56),
                   child: Divider(height: 1),
                 ),
             ],
@@ -232,7 +299,7 @@ class _Row extends StatelessWidget {
               const SizedBox(width: Insets.lg),
               Expanded(
                 child: Text(
-                  label,
+                  context.tr(label),
                   style: AppType.bodyLarge.copyWith(
                     fontSize: 15,
                     color: color ?? AppColors.ink,
@@ -252,6 +319,7 @@ class _Row extends StatelessWidget {
 }
 
 /// Shared by the settings and help screens so every list looks the same.
+/// [SettingsRow.label] is translated here, so callers pass the English.
 class SettingsGroup extends StatelessWidget {
   const SettingsGroup({super.key, required this.children});
 

@@ -6,6 +6,8 @@ import '../../app/router.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
+import '../../core/l10n/ar/qa1.dart';
+import '../../core/l10n/tr.dart';
 import '../../core/models/models.dart';
 import '../../core/providers/providers.dart';
 import '../../core/services/result.dart';
@@ -25,6 +27,7 @@ class GroupHubScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final live = ref.watch(liveSessionsProvider);
     final invites = ref.watch(myInvitesProvider).valueOrNull ?? const <GroupSession>[];
+    final saved = ref.watch(savedSessionsProvider).valueOrNull ?? const <SavedSession>[];
     final past = (ref.watch(mySessionsProvider).valueOrNull ?? const <GroupSession>[])
         .where((s) => !s.stage.isLive)
         .toList();
@@ -42,7 +45,9 @@ class GroupHubScreen extends ConsumerWidget {
               compact: true,
               color: Colors.white,
               foreground: AppColors.primary,
-              onPressed: () => CreateSessionSheet.show(context),
+              onPressed: () {
+                CreateSessionSheet.show(context);
+              },
             ),
           ),
           const SizedBox(width: Insets.md),
@@ -53,7 +58,14 @@ class GroupHubScreen extends ConsumerWidget {
               compact: true,
               color: AppColors.accent,
               foreground: AppColors.ink,
-              onPressed: () => context.push(Routes.joinSession),
+              // A block body, so the push future is not handed to the button:
+              // the join flow ends in pushReplacement and leaving a session
+              // calls go, and go_router completes a push future only on a pop.
+              // Returning it left this button spinning and disabled for the
+              // rest of the run.
+              onPressed: () {
+                context.push(Routes.joinSession);
+              },
             ),
           ),
         ],
@@ -70,20 +82,33 @@ class GroupHubScreen extends ConsumerWidget {
             const SizedBox(height: Insets.lg),
           ],
           if (live.isNotEmpty) ...[
-            SectionHeader(title: 'Active sessions (${live.length})'),
+            SectionHeader(title: context.tr('Active sessions ({count})', {'count': live.length})),
             for (final s in live) ...[
               _SessionTile(session: s),
               const SizedBox(height: Insets.md),
             ],
             const SizedBox(height: Insets.lg),
           ],
-          if (live.isEmpty && invites.isEmpty && past.isEmpty)
+          if (live.isEmpty && invites.isEmpty && saved.isEmpty && past.isEmpty)
             const EmptyView(
               icon: Icons.groups_outlined,
               title: 'No group orders yet',
               message: 'Start a session and invite the people you are eating with. '
                   'Everyone adds their own food to one shared cart.',
             ),
+          if (saved.isNotEmpty) ...[
+            const SectionHeader(title: 'Saved groups'),
+            Text(
+              context.tr('Start a new order with the same people, without inviting them again.'),
+              style: AppType.caption,
+            ),
+            const SizedBox(height: Insets.md),
+            for (final s in saved) ...[
+              _SavedTile(saved: s),
+              const SizedBox(height: Insets.md),
+            ],
+            const SizedBox(height: Insets.lg),
+          ],
           if (past.isNotEmpty) ...[
             const SectionHeader(title: 'Past sessions'),
             for (final s in past.take(8)) ...[
@@ -115,8 +140,8 @@ class _InviteTile extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(session.name, style: AppType.bodyStrong),
-                  Text('${session.hostName} invited you', style: AppType.caption),
+                  Text(context.isolate(session.name), style: AppType.bodyStrong),
+                  Text(context.tr('{name} invited you', {'name': context.isolate(session.hostName)}), style: AppType.caption),
                 ],
               ),
             ),
@@ -154,6 +179,8 @@ class _SessionTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lines = ref.watch(sessionLinesProvider(session.id)).valueOrNull ?? const [];
+
     return GatherCard(
       onTap: () {
         ref.read(activeSessionIdProvider.notifier).state = session.id;
@@ -185,17 +212,20 @@ class _SessionTile extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  session.name,
+                  context.isolate(session.name),
                   style: AppType.bodyStrong,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${session.restaurantName ?? 'No restaurant yet'} · '
-                  '${session.memberCount} ${session.memberCount == 1 ? 'member' : 'members'}',
+                  '${session.restaurantName == null ? context.tr('No restaurant yet') : context.isolate(session.restaurantName!)} · '
+                  '${context.tr('{count} members|${countNote(session.memberCount)}', {'count': session.memberCount})} · '
+                  '${context.tr('{count} items|${countNote(lines.length)}', {'count': lines.length})}',
                   style: AppType.caption,
-                  maxLines: 1,
+                  // Two lines: the Arabic reads longer and was cut off on a
+                  // 360dp phone.
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -218,12 +248,115 @@ class _SessionTile extends ConsumerWidget {
   }
 }
 
+class _SavedTile extends ConsumerWidget {
+  const _SavedTile({required this.saved});
+
+  final SavedSession saved;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => GatherCard(
+        child: Row(
+          children: [
+            MemberAvatarStack(members: saved.members, size: 32),
+            const SizedBox(width: Insets.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(context.isolate(saved.name), style: AppType.bodyStrong),
+                  Text(
+                    '${context.tr('{count} people|${countNote(saved.members.length)}', {'count': saved.members.length})}'
+                    '${saved.timesUsed > 0 ? ' · ${context.tr('used {count}×|${countNote(saved.timesUsed)}', {'count': saved.timesUsed})}' : ''}',
+                    style: AppType.caption,
+                  ),
+                ],
+              ),
+            ),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert_rounded, color: AppColors.inkFaint),
+              tooltip: context.tr('Saved group options'),
+              onSelected: (value) async {
+                final uid = ref.read(currentUidProvider);
+                if (uid == null) return;
+                final service = ref.read(sessionServiceProvider);
+
+                if (value == 'rename') {
+                  final name = await _promptForName(context, saved.name);
+                  if (name == null || !context.mounted) return;
+                  await service.renameSavedSession(uid, saved.id, name);
+                  if (context.mounted) AppSnack.show(context, 'Group renamed');
+                  return;
+                }
+
+                if (value == 'delete') {
+                  await service.deleteSavedSession(uid, saved.id);
+                  if (context.mounted) AppSnack.show(context, 'Saved group removed');
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(value: 'rename', child: Text(context.tr('Rename'))),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Text(context.tr('Delete saved group'),
+                      style: const TextStyle(color: AppColors.danger)),
+                ),
+              ],
+            ),
+            GatherButton(
+              label: 'Start',
+              compact: true,
+              expand: false,
+              onPressed: () async {
+                final user = ref.read(currentUserOrNullProvider);
+                if (user == null) return;
+                final result = await ref
+                    .read(sessionServiceProvider)
+                    .startFromSaved(host: user, saved: saved);
+                if (!context.mounted) return;
+                switch (result) {
+                  case Err(:final message):
+                    AppSnack.error(context, message);
+                  case Ok(:final value):
+                    // Let everyone know the group is ordering again.
+                    ref.read(activeSessionIdProvider.notifier).state = value.id;
+                    if (context.mounted) context.push(Routes.session(value.id));
+                }
+              },
+            ),
+          ],
+        ),
+      );
+}
+
+Future<String?> _promptForName(BuildContext context, String current) {
+  final controller = TextEditingController(text: current);
+  return showDialog<String>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(context.tr('Rename group')),
+      content: GatherField(label: 'Name', controller: controller, autofocus: true),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(context.tr('Cancel'))),
+        FilledButton(
+          onPressed: () {
+            final value = controller.text.trim();
+            Navigator.pop(context, value.isEmpty ? null : value);
+          },
+          child: Text(context.tr('Save')),
+        ),
+      ],
+    ),
+  ).whenComplete(controller.dispose);
+}
+
 /// Names the session and creates it (FR6 / US4).
 class CreateSessionSheet extends ConsumerStatefulWidget {
   const CreateSessionSheet({super.key});
 
   static Future<void> show(BuildContext context) => showModalBottomSheet<void>(
         context: context,
+        useRootNavigator: true,
         isScrollControlled: true,
         backgroundColor: AppColors.surface,
         builder: (_) => const CreateSessionSheet(),
@@ -276,17 +409,17 @@ class _CreateSessionSheetState extends ConsumerState<CreateSessionSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Start a group order', style: AppType.headline),
+              Text(context.tr('Start a group order'), style: AppType.headline),
               const SizedBox(height: Insets.xs),
               Text(
-                'Give it a name so everyone knows which one they are joining.',
+                context.tr('Give it a name so everyone knows which one they are joining.'),
                 style: AppType.caption,
               ),
               const SizedBox(height: Insets.xl),
               GatherField(
                 label: 'Session name',
                 controller: _name,
-                hint: 'Friday dinner',
+                hint: 'Friday dinner|hint',
                 autofocus: true,
                 textCapitalization: TextCapitalization.sentences,
                 maxLength: 40,

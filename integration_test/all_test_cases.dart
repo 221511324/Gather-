@@ -9,7 +9,7 @@
 //
 //   flutter test integration_test/all_test_cases.dart -d DEVICE
 //
-// Each part keeps its own helpers, so nothing leaks between them.
+// Sprint 2 has no tests yet - that work is still outstanding.
 
 import 'dart:math' as math;
 import 'package:firebase_auth/firebase_auth.dart';
@@ -266,7 +266,7 @@ void main() {
 
         /// The tab that is actually drawn as selected, read off the widget tree.
         String? highlighted() {
-          for (final label in ['Home', 'Search', 'Group', 'Profile']) {
+          for (final label in ['Home', 'Search', 'Group', 'Orders', 'Profile']) {
             final finder = find.ancestor(
               of: find.text(label),
               matching: find.byType(Semantics),
@@ -285,6 +285,7 @@ void main() {
           'Home': '/home',
           'Search': '/search',
           'Group': '/group',
+          'Orders': '/orders',
           'Profile': '/profile',
         };
 
@@ -320,13 +321,13 @@ void main() {
         // 3. Push a full-screen route, come back, and confirm the bar recovers.
         router.go('/home');
         await settle();
-        router.push(Routes.editProfile);
+        router.push(Routes.cart);
         await settle();
         router.pop();
         await settle();
-        debugPrint('NAV after push round-trip location=${where()} highlighted=${highlighted()}');
+        debugPrint('NAV after cart round-trip location=${where()} highlighted=${highlighted()}');
         if (highlighted() != 'Home') {
-          problems.add('after returning from a pushed route, "${highlighted()}" was highlighted');
+          problems.add('after returning from the cart, "${highlighted()}" was highlighted');
         }
 
         await tester.pumpWidget(const SizedBox.shrink());
@@ -407,12 +408,31 @@ void main() {
           Routes.home,
           Routes.search,
           Routes.group,
+          Routes.orders,
           Routes.profile,
+          Routes.favorites,
+          Routes.cart,
+          Routes.checkout,
           Routes.editProfile,
+          Routes.addresses,
+          Routes.paymentMethods,
+          Routes.help,
+          Routes.faq,
+          Routes.contact,
           Routes.joinSession,
+          Routes.admin,
+          Routes.adminUsers,
+          Routes.adminOrders,
+          Routes.adminSessions,
+          Routes.adminTickets,
           Routes.restaurant('burger-yard'),
           Routes.session(sessionId),
-          // A code nobody is using must show an empty state, not crash.
+          Routes.sessionCart(sessionId),
+          Routes.sessionSpin(sessionId),
+          Routes.sessionPayment(sessionId),
+          // Deliberately missing records: these must show an empty state, not crash.
+          Routes.order('does-not-exist'),
+          Routes.trackOrder('does-not-exist'),
           '/join/9999',
           // An unknown path must land on the error page, not blow up.
           '/this-route-does-not-exist',
@@ -550,6 +570,9 @@ void main() {
 
         // Sign in -> sign up. The link is a Text.rich, so `find.text` would be
         // comparing against the whole span rather than the tappable words.
+        // On a small phone the link is below the fold.
+        await tester.ensureVisible(find.textContaining("Don't have an account"));
+        await tester.pumpAndSettle();
         await tester.tap(find.textContaining("Don't have an account"));
         await tester.pumpAndSettle();
         expect(find.text('Create your account'), findsOneWidget);
@@ -586,11 +609,12 @@ void main() {
         await tester.tap(submit);
         await tester.pump();
 
-        // "Eating with people?" only exists on the home screen, so it is an
+        // The story row only exists on the home screen, so it is an
         // unambiguous signal that sign-up succeeded and the router moved on.
+        // It sits at the top, where even a small phone builds it.
         await waitFor(
           tester,
-          find.text('Eating with people?'),
+          find.byKey(const ValueKey('story-rail')),
           timeout: const Duration(seconds: 45),
           because: 'the home screen after sign-up',
         );
@@ -598,15 +622,15 @@ void main() {
         expect(FirebaseAuth.instance.currentUser, isNotNull,
             reason: 'sign-up should leave the user authenticated');
 
-        // The catalogue seeds itself on first sign-in.
-        await waitFor(
-          tester,
-          find.text('Best sellers'),
-          timeout: const Duration(seconds: 60),
-          because: 'the seeded catalogue',
-        );
-        // The "Restaurants" section lives below the fold, so assert on the data
-        // rather than on widgets a ListView has not built yet.
+        // The catalogue seeds itself on first sign-in. Stories and the daily
+        // spin now sit at the top of home, so the catalogue's sections are
+        // below the fold on a small phone: wait on the data rather than on
+        // widgets a ListView has not built yet.
+        for (var i = 0; i < 400; i++) {
+          final seeded = container.read(restaurantsProvider).valueOrNull ?? const [];
+          if (seeded.isNotEmpty) break;
+          await tester.pump(const Duration(milliseconds: 150));
+        }
         final restaurants = container.read(restaurantsProvider).valueOrNull ?? const [];
         final items = container.read(allMenuItemsProvider).valueOrNull ?? const [];
         expect(restaurants, isNotEmpty, reason: 'the catalogue should have seeded');
