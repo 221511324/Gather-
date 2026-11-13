@@ -261,34 +261,6 @@ Firestore security rules are used to control access to application data and prot
 
 ---
 
-## AI Assistant Configuration
-
-The Gemini API key is intentionally excluded from this public repository.
-
-To enable Gemini integration, developers must configure their own API key.
-
-Create a file named `config/secrets.json` in the project root:
-
-```json
-{
-  "GEMINI_API_KEY": "AQ.Ab8RN6Ll9qJuxf6ainrNGp1cjrih2pZjvCuoANwG5mmhkXlAkA
-}
-```
-
-
-
-
-
-```gitignore
-config/secrets.json
-```
-
-Never commit API keys or private credentials to GitHub.
-
-If no valid key is configured, the application can use its local rule-based assistant instead.
-
----
-
 ## Getting Started
 
 ### Prerequisites
