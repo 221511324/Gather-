@@ -277,7 +277,7 @@ Create a file named `config/secrets.json` in the project root:
 
 
 
-Make sure the file is included in `.gitignore`:
+
 
 ```gitignore
 config/secrets.json
