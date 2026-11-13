@@ -271,11 +271,11 @@ Create a file named `config/secrets.json` in the project root:
 
 ```json
 {
-  "GEMINI_API_KEY": "YOUR_GEMINI_API_KEY"
+  "GEMINI_API_KEY": "AQ.Ab8RN6Ll9qJuxf6ainrNGp1cjrih2pZjvCuoANwG5mmhkXlAkA
 }
 ```
 
-Replace `YOUR_GEMINI_API_KEY` with a valid API key.
+
 
 Make sure the file is included in `.gitignore`:
 
